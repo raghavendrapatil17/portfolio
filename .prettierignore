@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-ssr
+docs
+_old-root-build
+_legacy_root_build
+coverage
+.DS_Store
+**/*.min.js
+**/*.min.css

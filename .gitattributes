@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+# Keep Windows-friendly endings for PowerShell scripts
+*.ps1 text eol=crlf
+
+# Images treated as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.svg text
+
+# Lockfiles keep as-is
+package-lock.json text eol=lf

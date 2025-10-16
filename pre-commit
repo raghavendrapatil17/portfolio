@@ -1,0 +1,21 @@
+# Husky v9+ plain hook (no shim sourcing). Will be compatible with v10.
+
+# Fail fast
+set -e
+
+echo "[pre-commit] running lock normalization + lint + typecheck"
+
+# 1. Normalize lockfile (ignore errors)
+npm run lock:public >/dev/null 2>&1 || true
+
+# 2. Stage lockfile if modified
+if ! git diff --quiet package-lock.json; then
+  git add package-lock.json
+  echo "[pre-commit] normalized package-lock.json and staged changes"
+fi
+
+# 3. Lint & typecheck (fast, no build)
+npm run lint --silent
+npm run typecheck --silent
+
+echo "[pre-commit] OK"
