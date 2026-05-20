@@ -23,10 +23,9 @@ export default function ScrollProgressBar() {
       <motion.div
         className="h-full origin-left rounded-full"
         style={{
-          scaleX: spring.get() / 100,
+          scaleX: progress / 100,
           background: "linear-gradient(90deg, #00f5ff, #6366f1, #a855f7)",
           boxShadow: "0 0 10px rgba(0,245,255,0.8), 0 0 20px rgba(99,102,241,0.5)",
-          scaleX: progress / 100,
         }}
       />
     </div>
