@@ -6,6 +6,7 @@ import { FiArrowDown, FiArrowUpRight, FiGithub, FiLinkedin, FiMail } from "react
 import { profile } from "@/data/portfolio";
 import { scrollToId } from "@/lib/scroll";
 import { useIntroDone } from "@/lib/motion";
+import { useHud } from "@/lib/latentHud";
 import { EASE, Magnetic, SplitChars, SplitWords } from "./ui/primitives";
 
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
@@ -53,6 +54,47 @@ function RoleRotator() {
   );
 }
 
+/** Live readout of what the cursor "query" is retrieving in the latent-space scene. */
+function RetrievalHud({ ready }: { ready: boolean }) {
+  const hud = useHud();
+  const rows: [string, string][] = [
+    ["query", "← your cursor"],
+    ["nearest", hud.cluster || "…"],
+    ["similarity", hud.score ? hud.score.toFixed(2) : "…"],
+    ["top_k", "8"],
+  ];
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={ready ? { opacity: 1, x: 0 } : undefined}
+      transition={{ duration: 1, delay: 1.2, ease: EASE }}
+      className="pointer-events-none absolute inset-x-0 top-24 z-10 hidden lg:block"
+    >
+      <div className="mx-auto max-w-6xl px-8 flex justify-end">
+        <div className="w-60 rounded-2xl border border-line bg-ink/55 backdrop-blur-md p-4 font-mono text-[11px] leading-6">
+          <div className="flex items-center justify-between mb-1 text-dim uppercase tracking-[0.18em] text-[10px]">
+            <span>vector retrieval</span>
+            <span className="live-dot !w-1.5 !h-1.5" />
+          </div>
+          {rows.map(([k, v]) => (
+            <div key={k} className="flex justify-between gap-3">
+              <span className="text-dim">{k}</span>
+              {k === "nearest" ? (
+                // Re-keyed on change: the new label slides in; no exit animation, so values never stack
+                <motion.span key={v} initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.3 }} className="text-grad font-medium">
+                  {v}
+                </motion.span>
+              ) : (
+                <span className="text-fg/90 tabular-nums">{v}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function Hero({ stats }: { stats: HeroStats }) {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
@@ -92,6 +134,8 @@ export default function Hero({ stats }: { stats: HeroStats }) {
           </div>
         </motion.div>
       </motion.div>
+
+      <RetrievalHud ready={ready} />
 
       <motion.div style={{ y: textY, opacity: textOpacity, filter: textBlur }} className="relative z-10 flex-1 flex flex-col justify-center mx-auto w-full max-w-6xl px-5 sm:px-8 pt-32 pb-10">
         <motion.div
