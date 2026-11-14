@@ -1,336 +1,255 @@
 "use client";
-import { useRef, useState } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
-import { FiGithub, FiExternalLink, FiX } from "react-icons/fi";
+import { useEffect, useState, type MouseEvent } from "react";
+import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { FiArrowUpRight, FiGitBranch, FiGithub, FiStar, FiX } from "react-icons/fi";
+import { projects, profile, type Project, type ProjectCategory } from "@/data/portfolio";
+import { EASE, Reveal, SectionHeading, spotlight } from "./ui/primitives";
 
-const PROJECTS = [
-  {
-    id: 1,
-    title: "Dr. Healify AI",
-    subtitle: "Intelligent Medical Assistant",
-    description: "A full-stack AI healthcare chatbot built with Flask, LLaMA, LangChain, and RAG. Features symptom checking, BMI calculation, health monitoring, and condition explanation. Achieved 96.58% disease prediction accuracy with a Random Forest classifier.",
-    tags: ["Python", "Flask", "LLaMA", "LangChain", "RAG", "Random Forest", "Scikit-learn"],
-    category: "AI / ML",
-    emoji: "🏥",
-    highlight: true,
-    gradient: "from-cyan-500/20 via-blue-500/10 to-transparent",
-    accent: "#00f5ff",
-    achievement: "96.58% Accuracy",
-    github: "https://github.com/raghavendrapatil17/Dr-HeAlify-AI-Using-LLM-Models",
-    demo: "https://github.com/raghavendrapatil17/Dr-HeAlify-AI-Using-LLM-Models",
-  },
-  {
-    id: 2,
-    title: "House Price Prediction",
-    subtitle: "ML Regression System",
-    description: "A machine learning regression system that predicts real estate prices using location, size, amenities, and market trend data. Features an interactive Streamlit dashboard for real-time price estimation and market analytics.",
-    tags: ["Python", "Scikit-learn", "Streamlit", "Pandas", "NumPy", "Matplotlib"],
-    category: "Data Science",
-    emoji: "🏡",
-    highlight: false,
-    gradient: "from-emerald-500/20 via-teal-500/10 to-transparent",
-    accent: "#10b981",
-    achievement: "ML Regression",
-    github: "https://github.com/raghavendrapatil17/House-Price-Prediction",
-  },
-  {
-    id: 3,
-    title: "USA Real Estate Dashboard",
-    subtitle: "Market Analysis & Visualization",
-    description: "An interactive data analytics dashboard for the US real estate market. Visualizes market trends, price distributions, property comparisons, and regional insights using advanced charting and data processing techniques.",
-    tags: ["Python", "Power BI", "Pandas", "Matplotlib", "Seaborn", "Data Analysis"],
-    category: "Data Science",
-    emoji: "📊",
-    highlight: false,
-    gradient: "from-blue-500/20 via-indigo-500/10 to-transparent",
-    accent: "#3b82f6",
-    achievement: "Market Analytics",
-    github: "https://github.com/raghavendrapatil17/USA-Real-Estate-Market-Analysis-Dashboard",
-  },
-  {
-    id: 4,
-    title: "Online Art Gallery",
-    subtitle: "Full-Stack Web Application",
-    description: "A full-stack online art gallery platform enabling artists to showcase and sell their work. Features artist profiles, gallery management, artwork listings, and an intuitive browsing experience with modern UI design.",
-    tags: ["HTML", "CSS", "JavaScript", "Bootstrap", "Flask", "MySQL"],
-    category: "Full-Stack",
-    emoji: "🎨",
-    highlight: false,
-    gradient: "from-pink-500/20 via-rose-500/10 to-transparent",
-    accent: "#ec4899",
-    achievement: "Full-Stack App",
-    github: "https://github.com/raghavendrapatil17/Online-Art-Gallery",
-  },
-  {
-    id: 5,
-    title: "NextHire AI",
-    subtitle: "Resume & LinkedIn Analyzer",
-    description: "An AI-powered career tool that analyzes resumes and LinkedIn profiles to provide actionable feedback, ATS optimization scores, skill gap analysis, and tailored job recommendations. Helps candidates stand out in competitive hiring pipelines.",
-    tags: ["Python", "LLM", "LangChain", "Flask", "NLP", "RAG"],
-    category: "AI / ML",
-    emoji: "📄",
-    highlight: true,
-    gradient: "from-indigo-500/20 via-blue-500/10 to-transparent",
-    accent: "#6366f1",
-    achievement: "AI Career Tool",
-    github: "https://github.com/raghavendrapatil17/NextHire-AI-Resume-Linkedin-Analyzer",
-    demo: "https://github.com/raghavendrapatil17/NextHire-AI-Resume-Linkedin-Analyzer",
-  },
-  {
-    id: 7,
-    title: "Mango Disease Detection",
-    subtitle: "CNN Transfer Learning",
-    description: "A deep learning system using CNN-based transfer learning to detect diseases in mango trees from leaf images. Research presented at the 4th International Conference on NKCon '25. Achieved high classification accuracy across multiple disease categories.",
-    tags: ["Python", "TensorFlow", "CNN", "Transfer Learning", "OpenCV", "Deep Learning"],
-    category: "AI / ML",
-    emoji: "🥭",
-    highlight: true,
-    gradient: "from-yellow-500/20 via-orange-500/10 to-transparent",
-    accent: "#f59e0b",
-    achievement: "NKCon '25 Research",
-    github: "https://github.com/raghavendrapatil17",
-  },
-  {
-    id: 8,
-    title: "Plagiarism Checker",
-    subtitle: "ML-Based Detection System",
-    description: "An NLP-driven plagiarism detection tool using Naïve Bayes, SVM, and Random Forest models. Built a Flask web application for real-time analysis with similarity scoring and content highlighting across documents.",
-    tags: ["Python", "Flask", "NLP", "Naïve Bayes", "SVM", "Random Forest"],
-    category: "AI / ML",
-    emoji: "🔍",
-    highlight: false,
-    gradient: "from-violet-500/20 via-purple-500/10 to-transparent",
-    accent: "#a855f7",
-    achievement: "Real-time Detection",
-    github: "https://github.com/raghavendrapatil17",
-  },
-];
+export type LiveRepo = { stars: number; forks: number; language: string | null; pushedAt: string; url: string; name: string; description: string | null };
+type LiveMap = Record<string, LiveRepo>;
 
-const CATEGORIES = ["All", "AI / ML", "Data Science", "Full-Stack"];
+function timeAgo(iso: string) {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days < 1) return "today";
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
 
-export default function Projects() {
-  const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
-  const [filter, setFilter] = useState("All");
-  const [modal, setModal]   = useState<typeof PROJECTS[0] | null>(null);
+function LiveMeta({ live }: { live?: LiveRepo }) {
+  if (!live) return null;
+  return (
+    <div className="flex items-center gap-4 font-mono text-xs text-muted">
+      {live.stars > 0 && <span className="inline-flex items-center gap-1.5"><FiStar size={12} /> {live.stars}</span>}
+      {live.language && <span>{live.language}</span>}
+      <span className="text-dim">updated {timeAgo(live.pushedAt)}</span>
+    </div>
+  );
+}
 
-  const filtered = filter === "All" ? PROJECTS : PROJECTS.filter((p) => p.category === filter);
+/** Abstract generative cover so each project has a distinctive visual without screenshots. */
+function Cover({ p, large }: { p: Project; large?: boolean }) {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0" style={{ background: `radial-gradient(120% 80% at 80% 0%, ${p.accent}40, transparent 60%), radial-gradient(90% 70% at 0% 100%, ${p.accent}22, transparent 60%)` }} />
+      <div className="absolute inset-0 grid-bg opacity-60" />
+      <motion.div
+        className="absolute rounded-full blur-3xl"
+        style={{ background: p.accent, width: large ? 340 : 200, height: large ? 340 : 200, right: "-10%", top: "-20%", opacity: 0.25 }}
+        animate={{ x: [0, -30, 0], y: [0, 20, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <span
+        className="absolute right-6 bottom-2 font-semibold tracking-[-0.06em] leading-none select-none"
+        style={{ fontSize: large ? "9rem" : "5.5rem", color: "transparent", WebkitTextStroke: `1px ${p.accent}55` }}
+      >
+        {String(projects.indexOf(p) + 1).padStart(2, "0")}
+      </span>
+    </div>
+  );
+}
+
+function FeaturedCard({ p, i, live, onOpen }: { p: Project; i: number; live?: LiveRepo; onOpen: () => void }) {
+  const rx = useSpring(useMotionValue(0), { stiffness: 150, damping: 18 });
+  const ry = useSpring(useMotionValue(0), { stiffness: 150, damping: 18 });
+  const glareX = useTransform(ry, [-6, 6], ["20%", "80%"]);
+  const glare = useTransform(glareX, (x) => `radial-gradient(400px circle at ${x} 30%, rgba(255,255,255,0.08), transparent 60%)`);
+  const onMove = (e: MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    ry.set(((e.clientX - r.left) / r.width - 0.5) * 8);
+    rx.set(-((e.clientY - r.top) / r.height - 0.5) * 8);
+  };
+  const reset = () => { rx.set(0); ry.set(0); };
 
   return (
-    <section ref={ref} id="projects" className="relative py-32 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-950/10 to-transparent pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-16"
+    <Reveal>
+      <div style={{ perspective: 1400 }}>
+        <motion.article
+          onMouseMove={onMove}
+          onMouseLeave={reset}
+          style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }}
+          className="card group grid lg:grid-cols-2 min-h-[440px] cursor-pointer"
+          onClick={onOpen}
+          data-cursor
         >
-          <span className="text-xs font-mono text-blue-400/60 tracking-[0.4em] uppercase">03 / Projects</span>
-          <h2 className="text-4xl sm:text-5xl font-black mt-3">
-            Featured <span className="gradient-text">Work</span>
-          </h2>
-          <p className="text-white/40 mt-4 max-w-xl mx-auto">
-            Production-ready AI systems, full-stack applications, and research-backed solutions
-          </p>
-        </motion.div>
+          <div className={`relative min-h-[240px] ${i % 2 ? "lg:order-2" : ""}`}>
+            <Cover p={p} large />
+            <motion.div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: glare }} />
+            <span className="absolute left-6 top-6 inline-flex items-center gap-2 rounded-full bg-ink/60 backdrop-blur border border-line px-3 py-1.5 text-xs">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: p.accent }} /> {p.metric}
+            </span>
+          </div>
+          <div className="relative p-8 md:p-10 flex flex-col" style={{ transform: "translateZ(30px)" }}>
+            <div className="flex items-center justify-between mb-6">
+              <span className="eyebrow">{String(i + 1).padStart(2, "0")} · {p.category}</span>
+              <span className="grid place-items-center w-11 h-11 rounded-full border border-line group-hover:bg-fg group-hover:text-ink transition-colors duration-300">
+                <FiArrowUpRight className="group-hover:rotate-45 transition-transform duration-300" />
+              </span>
+            </div>
+            <h3 className="text-3xl md:text-4xl font-semibold tracking-[-0.03em]">{p.title}</h3>
+            <p className="serif-i text-xl text-muted mt-1">{p.subtitle}</p>
+            <p className="text-muted leading-relaxed mt-6">{p.description}</p>
+            <div className="mt-auto pt-8 flex flex-col gap-4">
+              <div className="flex flex-wrap gap-2">
+                {p.tags.map((t) => (
+                  <span key={t} className="text-xs px-3 py-1 rounded-full border border-line text-muted">{t}</span>
+                ))}
+              </div>
+              <LiveMeta live={live} />
+            </div>
+          </div>
+        </motion.article>
+      </div>
+    </Reveal>
+  );
+}
 
-        {/* Filter tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.2 }}
-          className="flex justify-center gap-3 mb-12 flex-wrap"
-        >
-          {CATEGORIES.map((cat) => (
-            <motion.button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-none ${
-                filter === cat
-                  ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/40 text-cyan-400"
-                  : "glass border border-white/10 text-white/50 hover:text-white"
-              }`}
-            >
-              {cat}
-            </motion.button>
-          ))}
-        </motion.div>
-
-        {/* Grid */}
-        <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((proj, i) => (
-              <motion.div
-                key={proj.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                whileHover={{ y: -6, scale: 1.02 }}
-                className={`relative glass border rounded-2xl p-6 flex flex-col gap-4 cursor-none overflow-hidden group transition-all duration-300 ${
-                  proj.highlight ? "border-cyan-500/30" : "border-white/8 hover:border-white/20"
-                }`}
-              >
-                {/* Gradient bg on hover */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${proj.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
-
-                {/* Glow on featured */}
-                {proj.highlight && (
-                  <div className="absolute inset-0 rounded-2xl pointer-events-none"
-                    style={{ boxShadow: `inset 0 0 40px rgba(0,245,255,0.04)` }} />
-                )}
-
-                {proj.highlight && (
-                  <span className="absolute top-4 right-4 text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-mono z-10">
-                    ★ Featured
-                  </span>
-                )}
-
-                <div className="relative z-10 flex flex-col gap-4">
-                  <div className="flex items-start gap-3">
-                    <span className="text-3xl">{proj.emoji}</span>
-                    <div>
-                      <h3 className="text-white font-bold text-lg leading-tight">{proj.title}</h3>
-                      <p className="text-white/40 text-sm">{proj.subtitle}</p>
-                    </div>
-                  </div>
-
-                  <p className="text-white/50 text-sm leading-relaxed line-clamp-3">{proj.description}</p>
-
-                  {/* Achievement badge */}
-                  <div
-                    className="inline-flex items-center gap-1.5 text-xs font-mono px-3 py-1 rounded-full self-start"
-                    style={{ background: `${proj.accent}15`, border: `1px solid ${proj.accent}30`, color: proj.accent }}
-                  >
-                    ✦ {proj.achievement}
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {proj.tags.slice(0, 4).map((t) => (
-                      <span key={t} className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-md font-mono">
-                        {t}
-                      </span>
-                    ))}
-                    {proj.tags.length > 4 && (
-                      <span className="text-xs text-white/30 px-2 py-0.5">+{proj.tags.length - 4}</span>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-4 mt-1 pt-3 border-t border-white/5">
-                    <a
-                      href={proj.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1.5 text-xs font-medium text-white/50 hover:text-cyan-400 transition-colors group/link"
-                    >
-                      <FiGithub size={13} />
-                      <span>View Code</span>
-                      <FiExternalLink size={10} className="opacity-0 group-hover/link:opacity-100 transition-opacity" />
-                    </a>
-                    <button
-                      onClick={() => setModal(proj)}
-                      className="flex items-center gap-1.5 text-xs font-medium text-white/30 hover:text-purple-400 transition-colors"
-                    >
-                      Details →
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
+function ProjectCard({ p, live, onOpen }: { p: Project; live?: LiveRepo; onOpen: () => void }) {
+  return (
+    <motion.div layout initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.45, ease: EASE }}>
+      <div onMouseMove={spotlight} onClick={onOpen} data-cursor className="card spotlight group h-full flex flex-col cursor-pointer">
+        <div className="relative h-40 border-b border-line">
+          <Cover p={p} />
+        </div>
+        <div className="p-6 flex flex-col flex-1">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight">{p.title}</h3>
+              <p className="text-sm text-muted">{p.subtitle}</p>
+            </div>
+            <FiArrowUpRight className="shrink-0 text-muted group-hover:text-fg group-hover:rotate-45 transition-all duration-300" />
+          </div>
+          <div className="mt-auto pt-6 flex flex-wrap gap-1.5">
+            {p.tags.slice(0, 4).map((t) => (
+              <span key={t} className="text-[11px] px-2.5 py-0.5 rounded-full border border-line text-muted">{t}</span>
             ))}
+          </div>
+          {live && <div className="mt-4"><LiveMeta live={live} /></div>}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function ProjectModal({ p, live, onClose }: { p: Project; live?: LiveRepo; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[130] bg-ink/80 backdrop-blur-md grid place-items-center p-4" onClick={onClose} data-lenis-prevent>
+      <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-label={p.title}
+        initial={{ y: 40, opacity: 0, scale: 0.97 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 20, opacity: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+        onClick={(e) => e.stopPropagation()}
+        className="card !bg-surface w-full max-w-2xl max-h-[88vh] overflow-y-auto"
+      >
+        <div className="relative h-48 border-b border-line"><Cover p={p} large /></div>
+        <button onClick={onClose} className="absolute right-4 top-4 grid place-items-center w-10 h-10 rounded-full bg-ink/70 backdrop-blur border border-line" aria-label="Close">
+          <FiX />
+        </button>
+        <div className="p-8">
+          <span className="eyebrow">{p.category} · {p.metric}</span>
+          <h3 className="text-3xl font-semibold tracking-tight mt-3">{p.title}</h3>
+          <p className="serif-i text-xl text-muted">{p.subtitle}</p>
+          <p className="text-muted leading-relaxed mt-6">{p.description}</p>
+          <div className="flex flex-wrap gap-2 mt-6">
+            {p.tags.map((t) => <span key={t} className="text-xs px-3 py-1 rounded-full border border-line text-muted">{t}</span>)}
+          </div>
+          {live && <div className="mt-6"><LiveMeta live={live} /></div>}
+          <div className="flex flex-wrap gap-3 mt-8">
+            <a href={p.github} target="_blank" rel="noopener noreferrer" className="btn btn-solid"><FiGithub /> View source</a>
+            {p.demo && <a href={p.demo} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">Live demo <FiArrowUpRight /></a>}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+const FILTERS: ("All" | ProjectCategory)[] = ["All", "AI / ML", "Data Science", "Full-Stack"];
+
+export default function Projects({ live, recent }: { live: LiveMap | null; recent: LiveRepo[] | null }) {
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
+  const [open, setOpen] = useState<Project | null>(null);
+  const liveFor = (p: Project) => (p.repo && live ? live[p.repo.toLowerCase()] : undefined);
+
+  const featured = projects.filter((p) => p.featured);
+  const rest = projects.filter((p) => !p.featured && (filter === "All" || p.category === filter));
+  const showcased = new Set(projects.map((p) => p.repo?.toLowerCase()).filter(Boolean));
+  const recentExtra = recent?.filter((r) => r.name.toLowerCase() !== profile.githubUser.toLowerCase() && !showcased.has(`${profile.githubUser}/${r.name}`.toLowerCase())).slice(0, 4) ?? [];
+
+  return (
+    <section id="work" className="relative py-28 md:py-40">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <SectionHeading
+          index="03"
+          eyebrow="Selected work"
+          title="Things I've"
+          accent="designed & shipped."
+          description="AI systems, data products and full-stack applications — several backed by peer-reviewed research."
+        />
+
+        <div className="flex flex-col gap-6">
+          {featured.map((p, i) => <FeaturedCard key={p.slug} p={p} i={i} live={liveFor(p)} onOpen={() => setOpen(p)} />)}
+        </div>
+
+        <div className="mt-24 flex flex-wrap items-end justify-between gap-6 mb-8">
+          <Reveal><h3 className="text-2xl md:text-3xl font-semibold tracking-tight">More projects</h3></Reveal>
+          <div className="flex flex-wrap gap-1 p-1 rounded-full border border-line bg-white/[0.02]">
+            {FILTERS.map((f) => (
+              <button key={f} onClick={() => setFilter(f)} className={`relative px-4 py-2 text-sm rounded-full transition-colors ${filter === f ? "text-ink" : "text-muted hover:text-fg"}`}>
+                {filter === f && <motion.span layoutId="filter-pill" className="absolute inset-0 rounded-full bg-fg" transition={{ type: "spring", stiffness: 400, damping: 34 }} />}
+                <span className="relative">{f}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <motion.div layout className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <AnimatePresence mode="popLayout">
+            {rest.map((p) => <ProjectCard key={p.slug} p={p} live={liveFor(p)} onOpen={() => setOpen(p)} />)}
           </AnimatePresence>
+          {rest.length === 0 && <p className="text-muted col-span-full py-10 text-center">The featured projects above cover this category.</p>}
         </motion.div>
 
-        {/* GitHub CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.6 }}
-          className="text-center mt-14"
-        >
-          <a
-            href="https://github.com/raghavendrapatil17"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 glass border border-white/10 hover:border-cyan-500/40 text-white/60 hover:text-cyan-400 px-6 py-3 rounded-full text-sm font-medium transition-all duration-200"
-          >
-            <FiGithub size={15} />
-            View All Repositories on GitHub
-            <FiExternalLink size={12} />
-          </a>
-        </motion.div>
+        {recentExtra.length > 0 && (
+          <Reveal className="mt-16">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-semibold tracking-tight flex items-center gap-3">
+                Recently on GitHub
+                <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-dim font-normal">
+                  <span className="live-dot !w-1.5 !h-1.5" /> live
+                </span>
+              </h3>
+              <a href={profile.socials.github} target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-fg inline-flex items-center gap-1">
+                All repositories <FiArrowUpRight />
+              </a>
+            </div>
+            <ul className="divide-y divide-line border-y border-line">
+              {recentExtra.map((r) => (
+                <li key={r.name}>
+                  <a href={r.url} target="_blank" rel="noopener noreferrer" className="group flex flex-wrap items-center gap-x-6 gap-y-1 py-4 hover:bg-white/[0.02] px-2 -mx-2 rounded-lg transition-colors">
+                    <FiGitBranch className="text-dim" />
+                    <span className="font-medium group-hover:text-accent transition-colors">{r.name.replace(/[-_]/g, " ")}</span>
+                    <span className="text-sm text-muted flex-1 min-w-[12rem] truncate">{r.description ?? ""}</span>
+                    <LiveMeta live={r} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        )}
       </div>
 
-      {/* Detail Modal */}
-      <AnimatePresence>
-        {modal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setModal(null)}
-            className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
-          >
-            <motion.div
-              initial={{ scale: 0.92, y: 30, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.92, y: 30, opacity: 0 }}
-              transition={{ type: "spring", damping: 25 }}
-              onClick={(e) => e.stopPropagation()}
-              className="glass-strong border border-white/10 rounded-2xl p-8 max-w-lg w-full relative overflow-hidden"
-            >
-              {/* Bg glow */}
-              <div
-                className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{ background: `radial-gradient(ellipse at top left, ${modal.accent}, transparent 70%)` }}
-              />
-
-              <button
-                onClick={() => setModal(null)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full glass border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors"
-              >
-                <FiX size={14} />
-              </button>
-
-              <div className="relative z-10">
-                <div className="text-4xl mb-3">{modal.emoji}</div>
-                <h3 className="text-2xl font-black text-white mb-1">{modal.title}</h3>
-                <p className="text-sm mb-1" style={{ color: modal.accent }}>{modal.subtitle}</p>
-                <div className="inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full mb-5"
-                  style={{ background: `${modal.accent}15`, color: modal.accent }}>
-                  ✦ {modal.achievement}
-                </div>
-                <p className="text-white/70 text-sm leading-relaxed mb-6">{modal.description}</p>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {modal.tags.map((t) => (
-                    <span key={t} className="text-xs glass border border-white/10 text-white/60 px-3 py-1 rounded-full font-mono">{t}</span>
-                  ))}
-                </div>
-                <a
-                  href={modal.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 btn-primary text-sm"
-                >
-                  <span className="flex items-center gap-2">
-                    <FiGithub size={14} />
-                    View on GitHub
-                    <FiExternalLink size={12} />
-                  </span>
-                </a>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AnimatePresence>{open && <ProjectModal p={open} live={liveFor(open)} onClose={() => setOpen(null)} />}</AnimatePresence>
     </section>
   );
 }

@@ -1,67 +1,41 @@
 "use client";
-import { motion } from "framer-motion";
-import { FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 import { FiArrowUp } from "react-icons/fi";
+import { navLinks, profile } from "@/data/portfolio";
+import { scrollToId } from "@/lib/scroll";
+import { Magnetic } from "./ui/primitives";
 
-export default function Footer() {
+export default function Footer({ updatedAt }: { updatedAt: string | null }) {
   return (
-    <footer className="relative border-t border-white/5 py-12">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col items-center gap-8">
-        {/* Name */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2"
-        >
-          <span className="w-2 h-2 rounded-full bg-cyan-400" />
-          <span className="text-sm font-mono text-white/40 tracking-widest">RAGHAVENDRA S PATIL</span>
-        </motion.div>
-
-        {/* Links */}
-        <div className="flex gap-6 text-sm text-white/40">
-          {["About","Skills","Projects","Experience","Contact"].map((l) => (
-            <button
-              key={l}
-              onClick={() => document.querySelector(`#${l.toLowerCase()}`)?.scrollIntoView({ behavior: "smooth" })}
-              className="hover:text-cyan-400 transition-colors cursor-none"
-            >
-              {l}
+    <footer className="relative border-t border-line overflow-hidden">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-16 pb-8">
+        <div className="flex flex-wrap items-start justify-between gap-10">
+          <div className="max-w-sm">
+            <div className="text-sm text-muted">Designed & engineered by</div>
+            <div className="text-xl font-semibold tracking-tight mt-1">{profile.name}</div>
+          </div>
+          <nav className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
+            {navLinks.map((l) => (
+              <button key={l.id} onClick={() => scrollToId(l.id)} className="text-muted hover:text-fg transition-colors">{l.label}</button>
+            ))}
+            <a href={profile.socials.github} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-fg transition-colors">GitHub</a>
+            <a href={profile.socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-fg transition-colors">LinkedIn</a>
+          </nav>
+          <Magnetic strength={0.5}>
+            <button onClick={() => scrollToId("top")} aria-label="Back to top" className="grid place-items-center w-14 h-14 rounded-full border border-line hover:bg-fg hover:text-ink transition-colors">
+              <FiArrowUp />
             </button>
-          ))}
+          </Magnetic>
         </div>
 
-        {/* Socials */}
-        <div className="flex gap-4">
-          {[
-            { href: "https://github.com/raghavendrapatil17",                           Icon: FiGithub },
-            { href: "https://www.linkedin.com/in/raghavendra-patil-a272a021b/",        Icon: FiLinkedin },
-            { href: "mailto:raghupatil9036@gmail.com",                                 Icon: FiMail },
-          ].map(({ href, Icon }) => (
-            <a
-              key={href}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/30 hover:text-cyan-400 transition-colors"
-            >
-              <Icon size={16} />
-            </a>
-          ))}
+        <div aria-hidden className="mt-16 select-none text-center font-semibold tracking-[-0.06em] leading-[0.8] text-[22vw] md:text-[15rem] text-transparent" style={{ WebkitTextStroke: "1px rgb(255 255 255 / 0.09)" }}>
+          {profile.firstName}
         </div>
 
-        <p className="text-white/20 text-xs text-center">
-          © {new Date().getFullYear()} Raghavendra S Patil. All rights reserved.
-        </p>
-
-        {/* Back to top */}
-        <motion.button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          whileHover={{ scale: 1.1, y: -3 }}
-          whileTap={{ scale: 0.9 }}
-          className="glass border border-white/10 hover:border-cyan-500/40 p-3 rounded-xl text-white/40 hover:text-cyan-400 transition-all cursor-none"
-        >
-          <FiArrowUp size={16} />
-        </motion.button>
+        <div className="mt-8 flex flex-wrap justify-between gap-4 text-xs text-dim font-mono">
+          <span>© {new Date().getFullYear()} {profile.name}</span>
+          {updatedAt && <span>GitHub data synced {new Date(updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: profile.timezone })}</span>}
+          <span>Built with Next.js, Three.js & Framer Motion</span>
+        </div>
       </div>
     </footer>
   );

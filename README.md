@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Raghavendra S Patil — Portfolio
 
-## Getting Started
+Personal portfolio built with Next.js 16, React 19, Tailwind CSS 4, Framer Motion, Three.js (React Three Fiber) and Lenis smooth scrolling.
 
-First, run the development server:
+## Requirements
+
+Node.js **20.9 or newer** (Next.js 16 requirement). With nvm-windows: `nvm use 24.22.2`.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
+npm run build   # production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Updating content
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+All content lives in **`src/data/portfolio.ts`** — profile, roles, about text, skills, projects, experience, education, research and certifications. Edit that one file; every section reads from it.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Add a project: append to `projects`. Set `repo: "owner/name"` to pull its live GitHub stars, language and last-updated date. Set `featured: true` to show it as a large case-study card.
+- Certificates: put the image in `public/certs/` and add an entry to `certifications`.
 
-## Learn More
+## Live data
 
-To learn more about Next.js, take a look at the following resources:
+`src/lib/github.ts` fetches GitHub profile and repository data on the server. The page is statically generated and **re-generated at most once per hour** (ISR), so it stays fast and current without client-side API calls. If GitHub is unreachable, the site renders with its static content.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Optional: set `GITHUB_TOKEN` (a read-only token) in your hosting environment to raise the GitHub API rate limit. Set `NEXT_PUBLIC_SITE_URL` to your production URL for correct social preview images (on Vercel this is detected automatically).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Contact form
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The contact form uses EmailJS (IDs in `src/components/Contact.tsx`): one template notifies you, a second sends the visitor an auto-reply.

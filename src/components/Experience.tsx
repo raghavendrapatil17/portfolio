@@ -1,241 +1,72 @@
 "use client";
 import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
-
-const EXPERIENCE = [
-  {
-    role: "Software Development Engineer",
-    company: "RealtySlices",
-    period: "March 2026 – Present",
-    location: "Hyderabad, India",
-    type: "Full-time",
-    color: "#00f5ff",
-    emoji: "🏢",
-    bullets: [
-      "Developing responsive frontend interfaces using Angular for dynamic, user-friendly platform experiences.",
-      "Building and customizing Microsoft Dynamics 365 CRM solutions to streamline business workflows and customer engagement.",
-      "Designing low-code automations using Power Apps, Power Automate, and Dataverse to integrate data and processes across systems.",
-    ],
-    skills: ["Angular", "Dynamics 365", "Power Platform", "TypeScript"],
-  },
-  {
-    role: "Data Analyst",
-    company: "Cognizant",
-    period: "Dec 2025 – March 2026",
-    location: "Chennai, India",
-    type: "Full-time",
-    color: "#a855f7",
-    emoji: "📊",
-    bullets: [
-      "Performed data cleaning, transformation, and modeling using Power Query and DAX.",
-      "Designed interactive Power BI dashboards to visualize business data, enabling faster decision-making.",
-      "Implemented forecasting and trend-analysis models to predict future performance metrics.",
-    ],
-    skills: ["Power BI", "DAX", "Power Query", "SQL"],
-  },
-];
-
-const EDUCATION = [
-  {
-    degree: "Master of Computer Applications (MCA)",
-    institution: "KLE Institute of Technology, VTU",
-    period: "Feb 2024 – Oct 2025",
-    gpa: "9.2 / 10",
-    color: "#3b82f6",
-    emoji: "🎓",
-  },
-  {
-    degree: "Bachelor of Computer Applications (BCA)",
-    institution: "KLE's RLSI Belagavi, RCU",
-    period: "Sept 2020 – Oct 2023",
-    gpa: "8.8 / 10",
-    color: "#10b981",
-    emoji: "📚",
-  },
-];
+import { motion, useScroll, useSpring } from "framer-motion";
+import { education, experience } from "@/data/portfolio";
+import { Reveal, SectionHeading } from "./ui/primitives";
 
 export default function Experience() {
-  const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const listRef = useRef<HTMLOListElement>(null);
+  const { scrollYProgress } = useScroll({ target: listRef, offset: ["start 70%", "end 60%"] });
+  const line = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
   return (
-    <section ref={ref} id="experience" className="relative py-32 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-950/5 to-transparent pointer-events-none" />
+    <section id="experience" className="relative py-28 md:py-40">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <SectionHeading index="04" eyebrow="Experience" title="Where I've" accent="made an impact." />
 
-      <div className="max-w-5xl mx-auto px-6">
-        {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-20"
-        >
-          <span className="text-xs font-mono text-cyan-400/60 tracking-[0.4em] uppercase">04 / Journey</span>
-          <h2 className="text-4xl sm:text-5xl font-black mt-3">
-            Experience &amp; <span className="gradient-text">Education</span>
-          </h2>
-        </motion.div>
+        <ol ref={listRef} className="relative">
+          <span className="absolute left-[7px] md:left-[calc(16rem+7px)] top-2 bottom-2 w-px bg-line" />
+          <motion.span className="absolute left-[7px] md:left-[calc(16rem+7px)] top-2 bottom-2 w-px origin-top" style={{ scaleY: line, background: "var(--grad)" }} />
 
-        <div className="grid lg:grid-cols-2 gap-16">
-          {/* Experience column */}
-          <div>
-            <motion.h3
-              initial={{ opacity: 0, x: -20 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ delay: 0.2 }}
-              className="text-sm font-mono text-white/40 tracking-widest uppercase mb-8 flex items-center gap-3"
-            >
-              <span className="w-8 h-px bg-cyan-500/50" />
-              Work Experience
-            </motion.h3>
+          {experience.map((e, i) => (
+            <li key={e.company} className="relative grid md:grid-cols-[16rem_1fr] gap-4 md:gap-12 pl-10 md:pl-0 pb-16 last:pb-0">
+              <Reveal className="md:text-right md:pr-14 pt-0.5">
+                <div className="font-mono text-sm text-muted">{e.period}</div>
+                <div className="text-sm text-dim mt-1">{e.location}</div>
+              </Reveal>
 
-            <div className="relative flex flex-col gap-0">
-              {/* Vertical line */}
-              <div className="absolute left-5 top-5 bottom-5 w-px timeline-line" />
+              <span className="absolute left-0 md:left-[16rem] top-1.5 w-[15px] h-[15px] rounded-full border-2 border-ink" style={{ background: e.current ? "var(--color-ok)" : "#3a3d4a", boxShadow: e.current ? "0 0 0 4px rgb(52 211 153 / 0.15)" : undefined }} />
 
-              {EXPERIENCE.map((job, i) => (
-                <motion.div
-                  key={job.company}
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={inView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ delay: 0.3 + i * 0.2, duration: 0.6 }}
-                  className="relative pl-14 pb-10"
-                >
-                  {/* Dot */}
-                  <div
-                    className="absolute left-0 top-1 w-10 h-10 rounded-full flex items-center justify-center text-lg border-2"
-                    style={{ background: `${job.color}15`, borderColor: `${job.color}40` }}
-                  >
-                    {job.emoji}
+              <Reveal delay={0.08 + i * 0.04} className="md:pl-14">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <h3 className="text-2xl md:text-3xl font-semibold tracking-tight">{e.role}</h3>
+                  <span className="serif-i text-2xl text-grad">@ {e.company}</span>
+                  {e.current && <span className="text-[10px] font-mono uppercase tracking-widest text-ok border border-ok/30 rounded-full px-2 py-0.5">Current</span>}
+                </div>
+                <ul className="mt-5 space-y-3 text-muted leading-relaxed">
+                  {e.points.map((pt) => (
+                    <li key={pt} className="flex gap-3">
+                      <span className="mt-2.5 w-1 h-1 rounded-full bg-accent shrink-0" />
+                      {pt}
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-wrap gap-2 mt-6">
+                  {e.stack.map((s) => <span key={s} className="text-xs px-3 py-1 rounded-full border border-line text-muted">{s}</span>)}
+                </div>
+              </Reveal>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-28">
+          <Reveal><h3 className="eyebrow mb-6">Education</h3></Reveal>
+          <div className="grid md:grid-cols-2 gap-4">
+            {education.map((ed, i) => (
+              <Reveal key={ed.degree} delay={i * 0.08}>
+                <div className="card p-7 flex items-start justify-between gap-6 h-full">
+                  <div>
+                    <div className="font-mono text-xs text-dim mb-3">{ed.period}</div>
+                    <h4 className="text-lg font-semibold tracking-tight">{ed.degree}</h4>
+                    <p className="text-muted text-sm mt-1">{ed.school}</p>
                   </div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    className="glass border border-white/8 hover:border-white/16 rounded-2xl p-5 transition-all duration-200"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-                      <div>
-                        <h4 className="text-white font-bold">{job.role}</h4>
-                        <p className="font-semibold text-sm" style={{ color: job.color }}>{job.company}</p>
-                        <p className="text-white/30 text-xs">{job.location}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-mono text-white/40">{job.period}</span>
-                        <br />
-                        <span
-                          className="text-xs px-2 py-0.5 rounded-full font-mono mt-1 inline-block"
-                          style={{ background: `${job.color}15`, color: job.color }}
-                        >
-                          {job.type}
-                        </span>
-                      </div>
-                    </div>
-
-                    <ul className="flex flex-col gap-2 mb-4">
-                      {job.bullets.map((b, bi) => (
-                        <li key={bi} className="text-white/50 text-sm leading-relaxed flex gap-2">
-                          <span style={{ color: job.color }} className="shrink-0 mt-0.5">▹</span>
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {job.skills.map((s) => (
-                        <span
-                          key={s}
-                          className="text-xs px-2.5 py-0.5 rounded-full font-mono"
-                          style={{ background: `${job.color}10`, border: `1px solid ${job.color}25`, color: job.color }}
-                        >
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </motion.div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Education column */}
-          <div>
-            <motion.h3
-              initial={{ opacity: 0, x: 20 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ delay: 0.2 }}
-              className="text-sm font-mono text-white/40 tracking-widest uppercase mb-8 flex items-center gap-3"
-            >
-              <span className="w-8 h-px bg-purple-500/50" />
-              Education
-            </motion.h3>
-
-            <div className="flex flex-col gap-6">
-              {EDUCATION.map((edu, i) => (
-                <motion.div
-                  key={edu.degree}
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={inView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ delay: 0.4 + i * 0.2 }}
-                  whileHover={{ scale: 1.02, y: -4 }}
-                  className="glass border border-white/8 hover:border-white/20 rounded-2xl p-6 transition-all duration-200 cursor-none"
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
-                      style={{ background: `${edu.color}15`, border: `1px solid ${edu.color}30` }}
-                    >
-                      {edu.emoji}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-white font-bold leading-snug">{edu.degree}</h4>
-                      <p className="text-white/40 text-sm mt-0.5">{edu.institution}</p>
-                      <p className="text-white/30 text-xs font-mono mt-1">{edu.period}</p>
-                    </div>
-                    <div
-                      className="text-right shrink-0 px-3 py-1.5 rounded-xl"
-                      style={{ background: `${edu.color}15`, border: `1px solid ${edu.color}30` }}
-                    >
-                      <div className="text-lg font-black" style={{ color: edu.color }}>{edu.gpa}</div>
-                      <div className="text-xs text-white/30">GPA</div>
-                    </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-3xl font-semibold tracking-tight text-grad">{ed.score.split(" ")[0]}</div>
+                    <div className="text-xs text-dim">GPA / 10</div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Certifications preview */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.8 }}
-              className="mt-8"
-            >
-              <h3 className="text-sm font-mono text-white/40 tracking-widest uppercase mb-5 flex items-center gap-3">
-                <span className="w-8 h-px bg-yellow-500/50" />
-                Certifications
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { name: "Microsoft Agent in a Day", issuer: "Koenig", year: "2026", color: "#00f5ff" },
-                  { name: "GenAI Powered Data Analytics", issuer: "Tata",    year: "2025", color: "#a855f7" },
-                  { name: "Web Development",           issuer: "Octanet",  year: "2024", color: "#3b82f6" },
-                  { name: "AWS Cloud Practitioner",    issuer: "AWS",      year: "2023", color: "#f59e0b" },
-                ].map((c) => (
-                  <motion.div
-                    key={c.name}
-                    whileHover={{ scale: 1.04 }}
-                    className="glass border border-white/8 rounded-xl p-3 cursor-none"
-                  >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black mb-2"
-                      style={{ background: `${c.color}20`, color: c.color }}>
-                      {c.year.slice(2)}
-                    </div>
-                    <p className="text-white text-xs font-semibold leading-tight">{c.name}</p>
-                    <p className="text-white/30 text-xs mt-0.5">{c.issuer} · {c.year}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </div>
       </div>
