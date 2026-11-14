@@ -57,38 +57,27 @@ function RoleRotator() {
 /** Live readout of what the cursor "query" is retrieving in the latent-space scene. */
 function RetrievalHud({ ready }: { ready: boolean }) {
   const hud = useHud();
-  const rows: [string, string][] = [
-    ["query", "← your cursor"],
-    ["nearest", hud.cluster || "…"],
-    ["similarity", hud.score ? hud.score.toFixed(2) : "…"],
-    ["top_k", "8"],
-  ];
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={ready ? { opacity: 1, x: 0 } : undefined}
+      initial={{ opacity: 0, y: -8 }}
+      animate={ready ? { opacity: 1, y: 0 } : undefined}
       transition={{ duration: 1, delay: 1.2, ease: EASE }}
       className="pointer-events-none absolute inset-x-0 top-24 z-10 hidden lg:block"
     >
       <div className="mx-auto max-w-6xl px-8 flex justify-end">
-        <div className="w-60 rounded-2xl border border-line bg-ink/55 backdrop-blur-md p-4 font-mono text-[11px] leading-6">
-          <div className="flex items-center justify-between mb-1 text-dim uppercase tracking-[0.18em] text-[10px]">
-            <span>vector retrieval</span>
-            <span className="live-dot !w-1.5 !h-1.5" />
+        <div className="rounded-xl border border-line bg-ink/50 backdrop-blur-md px-3 py-2 font-mono text-[10px] leading-5">
+          <div className="flex items-center gap-2 text-dim uppercase tracking-[0.18em]">
+            <span className="live-dot !w-1.5 !h-1.5" /> vector search
           </div>
-          {rows.map(([k, v]) => (
-            <div key={k} className="flex justify-between gap-3">
-              <span className="text-dim">{k}</span>
-              {k === "nearest" ? (
-                // Re-keyed on change: the new label slides in; no exit animation, so values never stack
-                <motion.span key={v} initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.3 }} className="text-grad font-medium">
-                  {v}
-                </motion.span>
-              ) : (
-                <span className="text-fg/90 tabular-nums">{v}</span>
-              )}
-            </div>
-          ))}
+          <div className="flex items-center gap-1.5 text-[11px] tabular-nums">
+            {/* Re-keyed on change: the new label slides in; no exit animation, so values never stack */}
+            <motion.span key={hud.cluster} initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.3 }} className="text-grad font-medium">
+              {hud.cluster || "…"}
+            </motion.span>
+            <span className="text-dim">·</span>
+            <span className="text-fg/90">{hud.score ? hud.score.toFixed(2) : "…"}</span>
+            <span className="text-dim">· k=8</span>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -123,26 +112,28 @@ export default function Hero({ stats }: { stats: HeroStats }) {
       <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full bg-accent/20 blur-[160px] pointer-events-none" />
 
       <motion.div style={{ y: sceneY, opacity: sceneOpacity }} className="absolute inset-0 md:left-[38%] pointer-events-none">
+        {/* Opacity only: scaling this wrapper would make the canvas measure itself too small.
+            The scene grows in on its own once `ready` flips. */}
         <motion.div
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={ready ? { scale: 1, opacity: 1 } : undefined}
-          transition={{ duration: 1.8, ease: EASE, delay: 0.1 }}
+          initial={{ opacity: 0 }}
+          animate={ready ? { opacity: 1 } : undefined}
+          transition={{ duration: 1.2, ease: EASE, delay: 0.1 }}
           className="absolute inset-0"
         >
           <div className="absolute inset-0 opacity-30 translate-x-[30%] translate-y-[8%] md:opacity-100 md:translate-x-0 md:translate-y-0">
-            <HeroScene />
+            <HeroScene ready={ready} />
           </div>
         </motion.div>
       </motion.div>
 
       <RetrievalHud ready={ready} />
 
-      <motion.div style={{ y: textY, opacity: textOpacity, filter: textBlur }} className="relative z-10 flex-1 flex flex-col justify-center mx-auto w-full max-w-6xl px-5 sm:px-8 pt-32 pb-10">
+      <motion.div style={{ y: textY, opacity: textOpacity, filter: textBlur }} className="relative z-10 flex-1 flex flex-col justify-center mx-auto w-full max-w-6xl px-5 sm:px-8 pt-28 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={ready ? { opacity: 1, y: 0 } : undefined}
           transition={{ duration: 0.8, delay: 0.55, ease: EASE }}
-          className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-8 text-sm text-muted"
+          className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-6 text-sm text-muted"
         >
           {profile.available && (
             <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1.5">
@@ -154,7 +145,7 @@ export default function Hero({ stats }: { stats: HeroStats }) {
           </span>
         </motion.div>
 
-        <h1 className="text-[15vw] sm:text-[12vw] md:text-[8.5rem] lg:text-[10rem] font-semibold tracking-[-0.055em] leading-[0.88]">
+        <h1 className="text-[min(15vw,17vh)] sm:text-[min(12vw,16vh)] md:text-[min(8.5vw,15vh,7.5rem)] font-semibold tracking-[-0.05em] leading-[0.9]">
           <SplitChars text={profile.firstName} delay={0.15} play={ready} className="block" />
           <span className="block serif-i text-grad tracking-[-0.03em] pr-2">
             <SplitWords text={profile.lastName} animateOnMount play={ready} delay={0.45} />
@@ -165,7 +156,7 @@ export default function Hero({ stats }: { stats: HeroStats }) {
           initial={{ opacity: 0, y: 16 }}
           animate={ready ? { opacity: 1, y: 0 } : undefined}
           transition={{ duration: 0.9, delay: 0.75, ease: EASE }}
-          className="mt-10 grid md:grid-cols-[1fr_auto] gap-8 items-end"
+          className="mt-8 grid md:grid-cols-[1fr_auto] gap-8 items-end"
         >
           <div className="max-w-xl">
             <p className="text-lg sm:text-xl text-muted mb-2 flex flex-wrap gap-x-2">

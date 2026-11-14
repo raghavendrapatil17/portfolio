@@ -124,7 +124,7 @@ void main(){
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   gl_Position = projectionMatrix * mv;
   float tw = 0.75 + 0.25 * sin(uTime * 2.0 + aPhase * 6.2831);
-  gl_PointSize = aSize * (1.0 + h * 1.9) * tw * uPixelRatio * (22.0 / -mv.z);
+  gl_PointSize = aSize * (1.0 + h * 1.9) * tw * uPixelRatio * (19.0 / -mv.z);
   vColor = mix(aColor * 0.75, vec3(1.0), h * 0.55);
   vAlpha = 0.32 + 0.68 * h + 0.12 * tw;
 }`;
@@ -168,13 +168,14 @@ function makeScratch() {
     lastPointer: new THREE.Vector2(9, 9),
     ndc: new THREE.Vector2(),
     lastMove: -10,
+    appearAt: -1,
     topIdx: new Int32Array(TOP_K),
     topD: new Float32Array(TOP_K),
     votes: new Float32Array(CLUSTERS.length),
   };
 }
 
-function LatentSpace({ perCluster, noise }: { perCluster: number; noise: number }) {
+function LatentSpace({ perCluster, noise, ready }: { perCluster: number; noise: number; ready: boolean }) {
   const space = useMemo(() => buildSpace(perCluster, noise), [perCluster, noise]);
   useMouseTracker();
   const group = useRef<THREE.Group>(null);
@@ -211,9 +212,16 @@ function LatentSpace({ perCluster, noise }: { perCluster: number; noise: number 
     g.rotation.y += dt * (0.05 + s * 0.35);
     g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, THREE.MathUtils.clamp(k.ndc.y, -1, 1) * 0.18 + s * 0.5, 0.04);
     // Sits right of centre so the clusters clear the headline; scroll dives in
-    g.scale.setScalar(THREE.MathUtils.lerp(g.scale.x, 0.9 + s * 0.55, 0.08));
-    g.position.x = THREE.MathUtils.lerp(g.position.x, 0.7 - s * 0.5, 0.08);
-    g.position.y = THREE.MathUtils.lerp(g.position.y, -0.15 - s * 0.5, 0.08);
+    // Fit the cloud (~2.1 units radius) inside the visible frame for any canvas aspect
+    const halfW = state.viewport.width / 2, halfH = state.viewport.height / 2;
+    const fit = THREE.MathUtils.clamp(Math.min((halfH * 0.66) / 2.1, (halfW * 0.78 - 0.3) / 2.1), 0.5, 0.72);
+    // Grow in from nothing when the intro hands off (eased over ~1.8s)
+    if (ready && k.appearAt < 0) k.appearAt = t;
+    const a = k.appearAt < 0 ? 0 : Math.min(1, (t - k.appearAt) / 1.8);
+    const appear = 1 - Math.pow(1 - a, 3);
+    g.scale.setScalar(THREE.MathUtils.lerp(g.scale.x, fit * (1 + s * 0.5) * Math.max(appear, 0.001), 0.12));
+    g.position.x = THREE.MathUtils.lerp(g.position.x, 0.35 - s * 0.4, 0.08);
+    g.position.y = THREE.MathUtils.lerp(g.position.y, 0.2 - s * 0.5, 0.08);
     g.updateMatrixWorld();
 
     // Query vector: follows the cursor, drifts on a Lissajous path when idle
@@ -369,7 +377,7 @@ function ClusterLabels({ centers }: { centers: THREE.Vector3[] }) {
   );
 }
 
-export default function HeroScene() {
+export default function HeroScene({ ready = true }: { ready?: boolean }) {
   const { reduced, lowPower } = useLiteMode();
   // Reduced motion: a still constellation glow instead of a live WebGL scene
   if (reduced) {
@@ -385,7 +393,7 @@ export default function HeroScene() {
       camera={{ position: [0, 0, 6], fov: 42 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
     >
-      <LatentSpace perCluster={lowPower ? 140 : 260} noise={lowPower ? 160 : 340} />
+      <LatentSpace perCluster={lowPower ? 140 : 260} noise={lowPower ? 160 : 340} ready={ready} />
     </Canvas>
   );
 }
