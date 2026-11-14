@@ -2,6 +2,7 @@
 import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { useLiteMode } from "@/lib/motion";
 
 /* Ashima 3D simplex noise (MIT) */
 const NOISE = /* glsl */ `
@@ -93,7 +94,7 @@ function heroScroll() {
   return Math.min(window.scrollY / window.innerHeight, 1);
 }
 
-function Blob() {
+function Blob({ detail }: { detail: number }) {
   const mesh = useRef<THREE.Mesh>(null);
   const mat = useRef<THREE.ShaderMaterial>(null);
   const initialUniforms = useMemo(
@@ -117,7 +118,7 @@ function Blob() {
   });
   return (
     <mesh ref={mesh}>
-      <icosahedronGeometry args={[1.5, 96]} />
+      <icosahedronGeometry args={[1.5, detail]} />
       <shaderMaterial ref={mat} vertexShader={vertex} fragmentShader={fragment} uniforms={initialUniforms} />
     </mesh>
   );
@@ -180,17 +181,26 @@ function Particles({ count = 1400 }) {
 }
 
 export default function HeroScene() {
+  const { reduced, lowPower } = useLiteMode();
+  // Reduced motion: a still, softly lit orb instead of a live WebGL scene
+  if (reduced) {
+    return (
+      <div className="absolute inset-0 grid place-items-center">
+        <div className="w-[60%] aspect-square rounded-full blur-[2px]" style={{ background: "radial-gradient(circle at 35% 30%, #c4b5fd, #6d5dfc 40%, #1b1250 75%)", boxShadow: "0 0 120px 20px rgb(109 93 252 / 0.35)" }} />
+      </div>
+    );
+  }
   return (
     <Canvas
-      dpr={[1, 1.75]}
+      dpr={lowPower ? [1, 1.25] : [1, 1.75]}
       camera={{ position: [0, 0, 6], fov: 42 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       eventSource={typeof document !== "undefined" ? document.body : undefined}
       eventPrefix="client"
     >
-      <Blob />
+      <Blob detail={lowPower ? 48 : 96} />
       <Rings />
-      <Particles />
+      <Particles count={lowPower ? 500 : 1400} />
     </Canvas>
   );
 }

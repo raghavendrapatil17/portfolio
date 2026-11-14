@@ -88,11 +88,33 @@ export default function Contact() {
           <span className="h-px w-10 bg-line" />
           <span className="eyebrow">Contact</span>
         </Reveal>
+        <div className="flex flex-wrap items-end justify-between gap-10">
         <h2 className="text-5xl sm:text-7xl md:text-8xl font-semibold tracking-[-0.045em] leading-[0.95]">
           <SplitWords text="Let's build" />
           <br />
           <span className="serif-i text-grad pr-2"><SplitWords text="something great." delay={0.15} /></span>
         </h2>
+
+          <Reveal delay={0.25}>
+            <Magnetic strength={0.45}>
+              <a
+                href={`mailto:${profile.email}`}
+                data-cursor="Email"
+                aria-label={`Email ${profile.email}`}
+                className="cta group relative grid place-items-center w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden isolate border border-line"
+              >
+                <span className="absolute inset-0 -z-10 rounded-full scale-0 group-hover:scale-100 transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)]" style={{ background: "var(--grad)" }} />
+                <svg viewBox="0 0 200 200" className="cta-ring absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)]" aria-hidden>
+                  <defs><path id="cta-circle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" /></defs>
+                  <text className="fill-current text-muted group-hover:text-white transition-colors" style={{ fontSize: 14, letterSpacing: "0.32em", textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>
+                    <textPath href="#cta-circle">Say hello · Open to work · Say hello · Open to work ·</textPath>
+                  </text>
+                </svg>
+                <FiArrowUpRight className="text-3xl group-hover:rotate-45 group-hover:text-white transition-transform duration-500" />
+              </a>
+            </Magnetic>
+          </Reveal>
+        </div>
 
         <div className="mt-16 grid lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-16">
           <Reveal className="flex flex-col gap-8">
@@ -120,7 +142,7 @@ export default function Contact() {
                   <dt className="flex items-center gap-3 text-muted"><Icon size={14} /> {k}</dt>
                   <dd>
                     {href ? (
-                      <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-accent transition-colors">{v} <FiArrowUpRight size={13} /></a>
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="link-u inline-flex items-center gap-1 hover:text-accent">{v} <FiArrowUpRight size={13} /></a>
                     ) : v}
                   </dd>
                 </div>

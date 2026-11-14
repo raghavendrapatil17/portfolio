@@ -33,7 +33,8 @@ export function SplitWords({
   delay = 0,
   stagger = 0.06,
   animateOnMount = false,
-}: { text: string; className?: string; delay?: number; stagger?: number; animateOnMount?: boolean }) {
+  play = true,
+}: { text: string; className?: string; delay?: number; stagger?: number; animateOnMount?: boolean; play?: boolean }) {
   const words = text.split(" ");
   const anim = { hidden: { y: "110%" }, show: (i: number) => ({ y: "0%", transition: { duration: 1, ease: EASE, delay: delay + i * stagger } }) };
   // The trigger lives on the (unclipped) wrapper: words inside overflow-hidden masks
@@ -43,7 +44,7 @@ export function SplitWords({
       className={className}
       aria-label={text}
       initial="hidden"
-      {...(animateOnMount ? { animate: "show" } : { whileInView: "show", viewport: { once: true, margin: "-60px" } })}
+      {...(animateOnMount ? { animate: play ? "show" : "hidden" } : { whileInView: "show", viewport: { once: true, margin: "-60px" } })}
     >
       {words.map((w, i) => (
         <span key={i} className="inline-block overflow-hidden align-bottom pb-[0.08em]" aria-hidden>
@@ -145,7 +146,7 @@ export function CountUp({ value, decimals = 0, suffix = "", duration = 1.8 }: { 
 }
 
 /** Characters flip up in 3D, one after another. */
-export function SplitChars({ text, className, delay = 0, stagger = 0.035 }: { text: string; className?: string; delay?: number; stagger?: number }) {
+export function SplitChars({ text, className, delay = 0, stagger = 0.035, play = true }: { text: string; className?: string; delay?: number; stagger?: number; play?: boolean }) {
   return (
     <span className={className} aria-label={text} style={{ perspective: "800px" }}>
       {text.split("").map((ch, i) => (
@@ -153,7 +154,7 @@ export function SplitChars({ text, className, delay = 0, stagger = 0.035 }: { te
           <motion.span
             className="inline-block origin-bottom"
             initial={{ y: "100%", rotateX: -90, opacity: 0 }}
-            animate={{ y: "0%", rotateX: 0, opacity: 1 }}
+            animate={play ? { y: "0%", rotateX: 0, opacity: 1 } : undefined}
             transition={{ duration: 1.1, ease: EASE, delay: delay + i * stagger }}
           >
             {ch === " " ? " " : ch}

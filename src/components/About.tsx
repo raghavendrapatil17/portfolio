@@ -57,8 +57,9 @@ export default function About() {
         <SectionHeading index="01" eyebrow="About" title="Engineer by craft," accent="curious by nature." />
 
         <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-12 lg:gap-20 items-start">
-          <Reveal>
-            <div ref={photoRef} className="relative aspect-[4/5] rounded-[1.75rem] overflow-hidden border border-line lg:sticky lg:top-28">
+          {/* Sticky on the grid item itself so it has the whole row's height to pin within */}
+          <Reveal className="lg:sticky lg:top-28">
+            <div ref={photoRef} className="relative aspect-[4/5] rounded-[1.75rem] overflow-hidden border border-line">
 <ClipReveal className="absolute inset-0">
               <motion.img
                 src={profile.photo}

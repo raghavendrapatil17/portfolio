@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import { AnimatePresence, motion, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from "framer-motion";
 import { FiArrowUpRight, FiGitBranch, FiGithub, FiStar, FiX } from "react-icons/fi";
+import { BodyPortal } from "./ui/Providers";
+import { useReducedMotionPref } from "@/lib/motion";
 import { projects, profile, type Project, type ProjectCategory } from "@/data/portfolio";
 import { EASE, Reveal, SectionHeading, spotlight } from "./ui/primitives";
 
@@ -50,7 +52,8 @@ function Cover({ p, large }: { p: Project; large?: boolean }) {
   );
 }
 
-function FeaturedCard({ p, i, live, onOpen, horizontal = false }: { p: Project; i: number; live?: LiveRepo; onOpen: () => void; horizontal?: boolean }) {
+function FeaturedCard({ p, i, live, onOpen, horizontal = false }: { p: Project; i: number; live?: LiveRepo; onOpen: (el: HTMLElement) => void; horizontal?: boolean }) {
+  const hidden = useContext(OpenSlug) === p.slug;
   const rx = useSpring(useMotionValue(0), { stiffness: 150, damping: 18 });
   const ry = useSpring(useMotionValue(0), { stiffness: 150, damping: 18 });
   const glareX = useTransform(ry, [-6, 6], ["20%", "80%"]);
@@ -68,9 +71,9 @@ function FeaturedCard({ p, i, live, onOpen, horizontal = false }: { p: Project; 
         <motion.article
           onMouseMove={onMove}
           onMouseLeave={reset}
-          style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }}
+          style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d", opacity: hidden ? 0 : 1 }}
           className={`card group grid lg:grid-cols-2 cursor-pointer ${horizontal ? "h-[min(72vh,620px)]" : "min-h-[440px]"}`}
-          onClick={onOpen}
+          onClick={(e) => onOpen(e.currentTarget)}
           data-cursor="View"
         >
           <div className={`relative min-h-[240px] ${i % 2 && !horizontal ? "lg:order-2" : ""}`}>
@@ -105,10 +108,11 @@ function FeaturedCard({ p, i, live, onOpen, horizontal = false }: { p: Project; 
   );
 }
 
-function ProjectCard({ p, live, onOpen }: { p: Project; live?: LiveRepo; onOpen: () => void }) {
+function ProjectCard({ p, live, onOpen }: { p: Project; live?: LiveRepo; onOpen: (el: HTMLElement) => void }) {
+  const hidden = useContext(OpenSlug) === p.slug;
   return (
     <motion.div layout initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.45, ease: EASE }}>
-      <div onMouseMove={spotlight} onClick={onOpen} data-cursor="View" className="card spotlight group h-full flex flex-col cursor-pointer">
+      <div onMouseMove={spotlight} onClick={(e) => onOpen(e.currentTarget)} data-cursor="View" style={{ opacity: hidden ? 0 : 1 }} className="card spotlight group h-full flex flex-col cursor-pointer">
         <div className="relative h-40 border-b border-line">
           <Cover p={p} />
         </div>
@@ -132,47 +136,110 @@ function ProjectCard({ p, live, onOpen }: { p: Project; live?: LiveRepo; onOpen:
   );
 }
 
-function ProjectModal({ p, live, onClose }: { p: Project; live?: LiveRepo; onClose: () => void }) {
+type Opened = { p: Project; rect: { top: number; left: number; width: number; height: number }; el: HTMLElement };
+
+/** Which project is open: its card hides so the expanding panel reads as the same object. */
+const OpenSlug = createContext<string | null>(null);
+
+const rectOf = (el: HTMLElement) => {
+  const r = el.getBoundingClientRect();
+  return { top: r.top, left: r.left, width: r.width, height: r.height };
+};
+
+/**
+ * Shared-element style expansion: the panel starts exactly where the clicked
+ * card sits, grows into a centred reading view, and shrinks back on close.
+ */
+function ProjectModal({ o, live, onClose }: { o: Opened; live?: LiveRepo; onClose: () => void }) {
+  const { p, rect } = o;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const [target] = useState(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const width = Math.min(780, vw - 24);
+    const height = Math.min(vh - 48, 760);
+    return { top: (vh - height) / 2, left: (vw - width) / 2, width, height };
+  });
+  const SPRING = { type: "spring", stiffness: 210, damping: 28, mass: 0.9 } as const;
+
+  const blocks = [
+    <span key="e" className="eyebrow">{p.category} · {p.metric}</span>,
+    <h3 key="t" className="text-3xl md:text-4xl font-semibold tracking-tight mt-3">{p.title}</h3>,
+    <p key="s" className="serif-i text-xl text-muted">{p.subtitle}</p>,
+    <p key="d" className="text-muted leading-relaxed mt-6">{p.description}</p>,
+    <div key="g" className="flex flex-wrap gap-2 mt-6">
+      {p.tags.map((t) => <span key={t} className="text-xs px-3 py-1 rounded-full border border-line text-muted">{t}</span>)}
+    </div>,
+    live ? <div key="l" className="mt-6"><LiveMeta live={live} /></div> : null,
+    <div key="a" className="flex flex-wrap gap-3 mt-8">
+      <a href={p.github} target="_blank" rel="noopener noreferrer" className="btn btn-solid"><FiGithub /> View source</a>
+      {p.demo && <a href={p.demo} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">Live demo <FiArrowUpRight /></a>}
+    </div>,
+  ].filter(Boolean);
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[130] bg-ink/80 backdrop-blur-md grid place-items-center p-4" onClick={onClose} data-lenis-prevent>
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0, transition: { duration: 0.45, delay: 0.1 } }}
+        transition={{ duration: 0.4 }}
+        className="fixed inset-0 z-[130] bg-ink/80 backdrop-blur-md"
+        onClick={onClose}
+      />
       <motion.div
         role="dialog"
         aria-modal="true"
         aria-label={p.title}
-        initial={{ y: 40, opacity: 0, scale: 0.97 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: 20, opacity: 0 }}
-        transition={{ duration: 0.5, ease: EASE }}
-        onClick={(e) => e.stopPropagation()}
-        className="card !bg-surface w-full max-w-2xl max-h-[88vh] overflow-y-auto"
+        initial={{ ...rect, borderRadius: 24 }}
+        animate={{ ...target, borderRadius: 28 }}
+        exit={{ ...rect, borderRadius: 24 }}
+        transition={SPRING}
+        className="card !bg-surface !fixed z-[131] flex flex-col shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)]"
+        data-lenis-prevent
       >
-        <div className="relative h-48 border-b border-line"><Cover p={p} large /></div>
-        <button onClick={onClose} className="absolute right-4 top-4 grid place-items-center w-10 h-10 rounded-full bg-ink/70 backdrop-blur border border-line" aria-label="Close">
+        <motion.div
+          className="relative shrink-0 border-b border-line overflow-hidden"
+          initial={{ height: rect.height * 0.5 }}
+          animate={{ height: 220 }}
+          exit={{ height: rect.height * 0.5 }}
+          transition={SPRING}
+        >
+          <Cover p={p} large />
+        </motion.div>
+        <motion.button
+          onClick={onClose}
+          initial={{ opacity: 0, scale: 0.6, rotate: -90 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0, transition: { delay: 0.3 } }}
+          exit={{ opacity: 0, scale: 0.6, transition: { duration: 0.15 } }}
+          className="absolute right-4 top-4 grid place-items-center w-10 h-10 rounded-full bg-ink/70 backdrop-blur border border-line z-10"
+          aria-label="Close"
+        >
           <FiX />
-        </button>
-        <div className="p-8">
-          <span className="eyebrow">{p.category} · {p.metric}</span>
-          <h3 className="text-3xl font-semibold tracking-tight mt-3">{p.title}</h3>
-          <p className="serif-i text-xl text-muted">{p.subtitle}</p>
-          <p className="text-muted leading-relaxed mt-6">{p.description}</p>
-          <div className="flex flex-wrap gap-2 mt-6">
-            {p.tags.map((t) => <span key={t} className="text-xs px-3 py-1 rounded-full border border-line text-muted">{t}</span>)}
-          </div>
-          {live && <div className="mt-6"><LiveMeta live={live} /></div>}
-          <div className="flex flex-wrap gap-3 mt-8">
-            <a href={p.github} target="_blank" rel="noopener noreferrer" className="btn btn-solid"><FiGithub /> View source</a>
-            {p.demo && <a href={p.demo} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">Live demo <FiArrowUpRight /></a>}
-          </div>
-        </div>
+        </motion.button>
+        <motion.div
+          className="p-8 overflow-y-auto"
+          initial="hidden"
+          animate="show"
+          exit={{ opacity: 0, transition: { duration: 0.15 } }}
+          variants={{ show: { transition: { staggerChildren: 0.06, delayChildren: 0.28 } } }}
+        >
+          {blocks.map((node, i) => (
+            <motion.div key={i} variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } } }}>
+              {node}
+            </motion.div>
+          ))}
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </>
   );
 }
+
 
 
 const LG_QUERY = "(min-width: 1024px)";
@@ -188,14 +255,15 @@ function useIsDesktop() {
  * Desktop: the section pins to the viewport and vertical scrolling drives the
  * featured cards sideways. Mobile / tablet: a simple vertical stack.
  */
-type GalleryProps = { items: Project[]; liveFor: (p: Project) => LiveRepo | undefined; onOpen: (p: Project) => void };
+type GalleryProps = { items: Project[]; liveFor: (p: Project) => LiveRepo | undefined; onOpen: (p: Project, el: HTMLElement) => void };
 
 function FeaturedGallery({ items, liveFor, onOpen }: GalleryProps) {
   const desktop = useIsDesktop();
-  if (desktop) return <PinnedGallery items={items} liveFor={liveFor} onOpen={onOpen} />;
+  const reduced = useReducedMotionPref();
+  if (desktop && !reduced) return <PinnedGallery items={items} liveFor={liveFor} onOpen={onOpen} />;
   return (
     <div className="mx-auto max-w-6xl px-5 sm:px-8 flex flex-col gap-6">
-      {items.map((p, i) => <FeaturedCard key={p.slug} p={p} i={i} live={liveFor(p)} onOpen={() => onOpen(p)} />)}
+      {items.map((p, i) => <FeaturedCard key={p.slug} p={p} i={i} live={liveFor(p)} onOpen={(el) => onOpen(p, el)} />)}
     </div>
   );
 }
@@ -225,7 +293,7 @@ function PinnedGallery({ items, liveFor, onOpen }: GalleryProps) {
         <motion.div ref={trackRef} style={{ x }} className="flex gap-8 w-max pl-[max(2rem,calc((100vw-72rem)/2+2rem))] pr-[12vw]">
           {items.map((p, i) => (
             <div key={p.slug} className="w-[min(1080px,78vw)] shrink-0">
-              <FeaturedCard p={p} i={i} live={liveFor(p)} onOpen={() => onOpen(p)} horizontal />
+              <FeaturedCard p={p} i={i} live={liveFor(p)} onOpen={(el) => onOpen(p, el)} horizontal />
             </div>
           ))}
         </motion.div>
@@ -247,7 +315,13 @@ const FILTERS: ("All" | ProjectCategory)[] = ["All", "AI / ML", "Data Science", 
 
 export default function Projects({ live, recent }: { live: LiveMap | null; recent: LiveRepo[] | null }) {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
-  const [open, setOpen] = useState<Project | null>(null);
+  const [open, setOpen] = useState<Opened | null>(null);
+  const openProject = (p: Project, el: HTMLElement) => setOpen({ p, el, rect: rectOf(el) });
+  // Re-measure the source card before closing so the panel shrinks back to where it is now
+  const closeProject = () => {
+    setOpen((o) => (o ? { ...o, rect: rectOf(o.el) } : o));
+    requestAnimationFrame(() => setOpen(null));
+  };
   const liveFor = (p: Project) => (p.repo && live ? live[p.repo.toLowerCase()] : undefined);
 
   const featured = projects.filter((p) => p.featured);
@@ -256,6 +330,7 @@ export default function Projects({ live, recent }: { live: LiveMap | null; recen
   const recentExtra = recent?.filter((r) => r.name.toLowerCase() !== profile.githubUser.toLowerCase() && !showcased.has(`${profile.githubUser}/${r.name}`.toLowerCase())).slice(0, 4) ?? [];
 
   return (
+    <OpenSlug.Provider value={open?.p.slug ?? null}>
     <section id="work" className="relative py-28 md:py-40">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <SectionHeading
@@ -268,7 +343,7 @@ export default function Projects({ live, recent }: { live: LiveMap | null; recen
 
       </div>
 
-      <FeaturedGallery items={featured} liveFor={liveFor} onOpen={setOpen} />
+      <FeaturedGallery items={featured} liveFor={liveFor} onOpen={openProject} />
 
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <div className="mt-24 flex flex-wrap items-end justify-between gap-6 mb-8">
@@ -285,7 +360,7 @@ export default function Projects({ live, recent }: { live: LiveMap | null; recen
 
         <motion.div layout className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <AnimatePresence mode="popLayout">
-            {rest.map((p) => <ProjectCard key={p.slug} p={p} live={liveFor(p)} onOpen={() => setOpen(p)} />)}
+            {rest.map((p) => <ProjectCard key={p.slug} p={p} live={liveFor(p)} onOpen={(el) => openProject(p, el)} />)}
           </AnimatePresence>
           {rest.length === 0 && <p className="text-muted col-span-full py-10 text-center">The featured projects above cover this category.</p>}
         </motion.div>
@@ -299,7 +374,7 @@ export default function Projects({ live, recent }: { live: LiveMap | null; recen
                   <span className="live-dot !w-1.5 !h-1.5" /> live
                 </span>
               </h3>
-              <a href={profile.socials.github} target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-fg inline-flex items-center gap-1">
+              <a href={profile.socials.github} target="_blank" rel="noopener noreferrer" className="link-u text-sm text-muted hover:text-fg inline-flex items-center gap-1">
                 All repositories <FiArrowUpRight />
               </a>
             </div>
@@ -319,7 +394,8 @@ export default function Projects({ live, recent }: { live: LiveMap | null; recen
         )}
       </div>
 
-      <AnimatePresence>{open && <ProjectModal p={open} live={liveFor(open)} onClose={() => setOpen(null)} />}</AnimatePresence>
+      <BodyPortal><AnimatePresence>{open && <ProjectModal key={open.p.slug} o={open} live={liveFor(open.p)} onClose={closeProject} />}</AnimatePresence></BodyPortal>
     </section>
+    </OpenSlug.Provider>
   );
 }

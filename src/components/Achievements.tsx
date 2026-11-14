@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiAward, FiMaximize2, FiX } from "react-icons/fi";
+import { BodyPortal } from "./ui/Providers";
 import { certifications, research } from "@/data/portfolio";
 import { ClipReveal, EASE, Reveal, SectionHeading, spotlight } from "./ui/primitives";
 
@@ -85,7 +86,7 @@ export default function Achievements() {
           {certifications.map((c, i) => <CertCard key={c.name} c={c} i={i} onOpen={() => setOpen(c)} />)}
         </div>
       </div>
-      <AnimatePresence>{open && <Lightbox c={open} onClose={() => setOpen(null)} />}</AnimatePresence>
+      <BodyPortal><AnimatePresence>{open && <Lightbox c={open} onClose={() => setOpen(null)} />}</AnimatePresence></BodyPortal>
     </section>
   );
 }

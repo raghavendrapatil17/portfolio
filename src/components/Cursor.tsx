@@ -36,13 +36,32 @@ export default function Cursor() {
       raf = requestAnimationFrame(() => update(document.elementFromPoint(x.get(), y.get())));
     };
     window.addEventListener("scroll", onScroll, { passive: true });
+    // Button fill grows from the entry point and retreats toward the exit point
+    const setOrigin = (e: PointerEvent) => {
+      const btn = (e.target as Element | null)?.closest<HTMLElement>(".btn");
+      if (!btn || (e.relatedTarget instanceof Node && btn.contains(e.relatedTarget))) return;
+      const r = btn.getBoundingClientRect();
+      btn.style.setProperty("--bx", `${e.clientX - r.left}px`);
+      btn.style.setProperty("--by", `${e.clientY - r.top}px`);
+    };
+    document.addEventListener("pointerover", setOrigin);
+    document.addEventListener("pointerout", setOrigin);
     const press = () => setDown(true);
-    const release = () => setDown(false);
+    // A click often opens or closes an overlay under a still mouse: re-check once it has rendered
+    let recheck: ReturnType<typeof setTimeout> | undefined;
+    const release = () => {
+      setDown(false);
+      clearTimeout(recheck);
+      recheck = setTimeout(() => update(document.elementFromPoint(x.get(), y.get())), 120);
+    };
     window.addEventListener("pointermove", move, { passive: true });
     window.addEventListener("pointerdown", press);
     window.addEventListener("pointerup", release);
     return () => {
+      clearTimeout(recheck);
       cancelAnimationFrame(raf);
+      document.removeEventListener("pointerover", setOrigin);
+      document.removeEventListener("pointerout", setOrigin);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerdown", press);

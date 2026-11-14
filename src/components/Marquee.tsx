@@ -2,6 +2,7 @@
 import { useRef } from "react";
 import { motion, useAnimationFrame, useMotionValue, useScroll, useSpring, useTransform, useVelocity } from "framer-motion";
 import { toolbelt } from "@/data/portfolio";
+import { useReducedMotionPref } from "@/lib/motion";
 
 const wrap = (min: number, max: number, v: number) => {
   const r = max - min;
@@ -17,8 +18,10 @@ function VelocityRow({ items, baseVelocity, outline = false }: { items: string[]
   const skew = useTransform(velocity, [-2500, 2500], [8, -8]);
   const x = useTransform(baseX, (v) => `${wrap(-25, 0, v)}%`);
   const direction = useRef(1);
+  const reduced = useReducedMotionPref();
 
   useAnimationFrame((_, delta) => {
+    if (reduced) return;
     let move = direction.current * baseVelocity * (delta / 1000);
     const f = factor.get();
     if (f < 0) direction.current = -1;

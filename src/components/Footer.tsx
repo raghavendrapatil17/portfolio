@@ -15,10 +15,10 @@ export default function Footer({ updatedAt }: { updatedAt: string | null }) {
           </div>
           <nav className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
             {navLinks.map((l) => (
-              <button key={l.id} onClick={() => scrollToId(l.id)} className="text-muted hover:text-fg transition-colors"><Scramble text={l.label} /></button>
+              <button key={l.id} onClick={() => scrollToId(l.id)} className="link-u text-muted hover:text-fg"><Scramble text={l.label} /></button>
             ))}
-            <a href={profile.socials.github} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-fg transition-colors">GitHub</a>
-            <a href={profile.socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-fg transition-colors">LinkedIn</a>
+            <a href={profile.socials.github} target="_blank" rel="noopener noreferrer" className="link-u text-muted hover:text-fg">GitHub</a>
+            <a href={profile.socials.linkedin} target="_blank" rel="noopener noreferrer" className="link-u text-muted hover:text-fg">LinkedIn</a>
           </nav>
           <Magnetic strength={0.5}>
             <button onClick={() => scrollToId("top")} aria-label="Back to top" className="grid place-items-center w-14 h-14 rounded-full border border-line hover:bg-fg hover:text-ink transition-colors">

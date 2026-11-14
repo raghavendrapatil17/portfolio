@@ -4,12 +4,14 @@ import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
 import { FiArrowUpRight, FiMenu, FiX } from "react-icons/fi";
 import { navLinks, profile } from "@/data/portfolio";
 import { scrollToId } from "@/lib/scroll";
+import { useIntroDone } from "@/lib/motion";
 import { EASE, Scramble } from "./ui/primitives";
 
 export default function Navbar() {
   const [active, setActive] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const ready = useIntroDone();
   const { scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
 
@@ -37,8 +39,8 @@ export default function Navbar() {
 
       <motion.header
         initial={{ y: -40, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.9, ease: EASE, delay: 0.2 }}
+        animate={ready ? { y: 0, opacity: 1 } : undefined}
+        transition={{ duration: 0.9, ease: EASE, delay: 0.5 }}
         className="fixed top-4 inset-x-0 z-[110] px-4"
       >
         <nav

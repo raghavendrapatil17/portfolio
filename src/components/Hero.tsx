@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
 import { FiArrowDown, FiArrowUpRight, FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 import { profile } from "@/data/portfolio";
 import { scrollToId } from "@/lib/scroll";
+import { useIntroDone } from "@/lib/motion";
 import { EASE, Magnetic, SplitChars, SplitWords } from "./ui/primitives";
 
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
@@ -58,6 +59,10 @@ export default function Hero({ stats }: { stats: HeroStats }) {
   const sceneY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const sceneOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   const textY = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const textBlur = useTransform(scrollYProgress, [0, 0.7], ["blur(0px)", "blur(8px)"]);
+  // Entrance starts the moment the intro curtain begins to lift
+  const ready = useIntroDone();
 
   // Only surface stats that are meaningful (hide zero values)
   const liveStats = stats
@@ -76,16 +81,23 @@ export default function Hero({ stats }: { stats: HeroStats }) {
       <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full bg-accent/20 blur-[160px] pointer-events-none" />
 
       <motion.div style={{ y: sceneY, opacity: sceneOpacity }} className="absolute inset-0 md:left-[38%] pointer-events-none">
-        <div className="absolute inset-0 opacity-30 translate-x-[30%] translate-y-[8%] md:opacity-100 md:translate-x-0 md:translate-y-0">
-          <HeroScene />
-        </div>
+        <motion.div
+          initial={{ scale: 0.6, opacity: 0 }}
+          animate={ready ? { scale: 1, opacity: 1 } : undefined}
+          transition={{ duration: 1.8, ease: EASE, delay: 0.1 }}
+          className="absolute inset-0"
+        >
+          <div className="absolute inset-0 opacity-30 translate-x-[30%] translate-y-[8%] md:opacity-100 md:translate-x-0 md:translate-y-0">
+            <HeroScene />
+          </div>
+        </motion.div>
       </motion.div>
 
-      <motion.div style={{ y: textY }} className="relative z-10 flex-1 flex flex-col justify-center mx-auto w-full max-w-6xl px-5 sm:px-8 pt-32 pb-10">
+      <motion.div style={{ y: textY, opacity: textOpacity, filter: textBlur }} className="relative z-10 flex-1 flex flex-col justify-center mx-auto w-full max-w-6xl px-5 sm:px-8 pt-32 pb-10">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: EASE }}
+          animate={ready ? { opacity: 1, y: 0 } : undefined}
+          transition={{ duration: 0.8, delay: 0.55, ease: EASE }}
           className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-8 text-sm text-muted"
         >
           {profile.available && (
@@ -99,16 +111,16 @@ export default function Hero({ stats }: { stats: HeroStats }) {
         </motion.div>
 
         <h1 className="text-[15vw] sm:text-[12vw] md:text-[8.5rem] lg:text-[10rem] font-semibold tracking-[-0.055em] leading-[0.88]">
-          <SplitChars text={profile.firstName} delay={0.3} className="block" />
+          <SplitChars text={profile.firstName} delay={0.15} play={ready} className="block" />
           <span className="block serif-i text-grad tracking-[-0.03em] pr-2">
-            <SplitWords text={profile.lastName} animateOnMount delay={0.5} />
+            <SplitWords text={profile.lastName} animateOnMount play={ready} delay={0.45} />
           </span>
         </h1>
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.9, ease: EASE }}
+          animate={ready ? { opacity: 1, y: 0 } : undefined}
+          transition={{ duration: 0.9, delay: 0.75, ease: EASE }}
           className="mt-10 grid md:grid-cols-[1fr_auto] gap-8 items-end"
         >
           <div className="max-w-xl">
@@ -137,8 +149,8 @@ export default function Hero({ stats }: { stats: HeroStats }) {
 
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.3, duration: 1 }}
+        animate={ready ? { opacity: 1 } : undefined}
+        transition={{ delay: 1.05, duration: 1 }}
         className="relative z-10 mx-auto w-full max-w-6xl px-5 sm:px-8 pb-8"
       >
         <div className="flex flex-wrap items-end justify-between gap-6 border-t border-line pt-6">

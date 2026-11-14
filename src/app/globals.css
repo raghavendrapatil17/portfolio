@@ -133,10 +133,45 @@ body {
   transition: background 0.25s, color 0.25s, border-color 0.25s;
   white-space: nowrap;
 }
+/* Liquid fill: a circle grows from where the cursor entered (--bx/--by set in JS) */
+.btn { isolation: isolate; overflow: hidden; transition: color 0.45s cubic-bezier(.22,1,.36,1), border-color 0.3s, transform 0.2s; }
+.btn::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: var(--bx, 50%);
+  top: var(--by, 50%);
+  width: 260%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.6s cubic-bezier(.22,1,.36,1);
+  pointer-events: none;
+}
+.btn:hover::before { transform: translate(-50%, -50%) scale(1); }
+.btn:active { transform: scale(0.97); }
 .btn-solid { background: var(--color-fg); color: var(--color-ink); }
-.btn-solid:hover { background: #fff; }
+.btn-solid::before { background: var(--grad); }
+.btn-solid:hover { color: #fff; }
 .btn-ghost { border: 1px solid var(--color-line); color: var(--color-fg); background: rgb(255 255 255 / 0.02); }
-.btn-ghost:hover { border-color: rgb(255 255 255 / 0.25); background: rgb(255 255 255 / 0.05); }
+.btn-ghost::before { background: var(--color-fg); }
+.btn-ghost:hover { color: var(--color-ink); border-color: transparent; }
+
+/* Underline that draws in from the left and leaves to the right */
+.link-u {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 100% 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.5s cubic-bezier(.22,1,.36,1), color 0.25s;
+  padding-bottom: 2px;
+}
+.link-u:hover { background-size: 100% 1px; background-position: 0% 100%; }
+
+/* Big magnetic CTA with a rotating text ring */
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+.cta-ring { animation: spin-slow 14s linear infinite; }
+.cta:hover .cta-ring { animation-duration: 5s; }
 
 /* ── Inputs ── */
 .field {
