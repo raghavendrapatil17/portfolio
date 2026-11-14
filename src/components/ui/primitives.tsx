@@ -143,3 +143,74 @@ export function CountUp({ value, decimals = 0, suffix = "", duration = 1.8 }: { 
     </span>
   );
 }
+
+/** Characters flip up in 3D, one after another. */
+export function SplitChars({ text, className, delay = 0, stagger = 0.035 }: { text: string; className?: string; delay?: number; stagger?: number }) {
+  return (
+    <span className={className} aria-label={text} style={{ perspective: "800px" }}>
+      {text.split("").map((ch, i) => (
+        <span key={i} aria-hidden className="inline-block overflow-hidden align-bottom pb-[0.1em]">
+          <motion.span
+            className="inline-block origin-bottom"
+            initial={{ y: "100%", rotateX: -90, opacity: 0 }}
+            animate={{ y: "0%", rotateX: 0, opacity: 1 }}
+            transition={{ duration: 1.1, ease: EASE, delay: delay + i * stagger }}
+          >
+            {ch === " " ? " " : ch}
+          </motion.span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*+<>/";
+
+/** Text that scrambles into place when the closest .group (or itself) is hovered. */
+export function Scramble({ text, className }: { text: string; className?: string }) {
+  const [out, setOut] = useState(text);
+  const raf = useRef(0);
+  const run = () => {
+    cancelAnimationFrame(raf.current);
+    const start = performance.now();
+    const step = (now: number) => {
+      const progress = (now - start) / 420;
+      const revealed = Math.floor(progress * text.length);
+      setOut(
+        text
+          .split("")
+          .map((c, i) => (c === " " || i < revealed ? c : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]))
+          .join(""),
+      );
+      if (revealed < text.length) raf.current = requestAnimationFrame(step);
+      else setOut(text);
+    };
+    raf.current = requestAnimationFrame(step);
+  };
+  useEffect(() => () => cancelAnimationFrame(raf.current), []);
+  return (
+    <span className={className} onMouseEnter={run} aria-label={text}>
+      <span aria-hidden>{out}</span>
+    </span>
+  );
+}
+
+/** Wipes its content into view with an expanding clip-path mask. */
+export function ClipReveal({ children, className, delay = 0, from = "bottom" }: { children: ReactNode; className?: string; delay?: number; from?: "bottom" | "left" }) {
+  const hidden = from === "bottom" ? "inset(100% 0% 0% 0%)" : "inset(0% 100% 0% 0%)";
+  // The unclipped wrapper owns the in-view trigger: a fully clipped element has
+  // zero visible area, so it would never register as intersecting itself.
+  return (
+    <motion.div className={className} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }}>
+      <motion.div
+        className="w-full h-full"
+        variants={{
+          hidden: { clipPath: hidden, scale: 1.08 },
+          show: { clipPath: "inset(0% 0% 0% 0%)", scale: 1, transition: { duration: 1.4, ease: EASE, delay } },
+        }}
+      >
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+}

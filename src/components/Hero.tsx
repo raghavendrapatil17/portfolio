@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
 import { FiArrowDown, FiArrowUpRight, FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 import { profile } from "@/data/portfolio";
 import { scrollToId } from "@/lib/scroll";
-import { EASE, Magnetic, SplitWords } from "./ui/primitives";
+import { EASE, Magnetic, SplitChars, SplitWords } from "./ui/primitives";
 
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
 
@@ -99,7 +99,7 @@ export default function Hero({ stats }: { stats: HeroStats }) {
         </motion.div>
 
         <h1 className="text-[15vw] sm:text-[12vw] md:text-[8.5rem] lg:text-[10rem] font-semibold tracking-[-0.055em] leading-[0.88]">
-          <SplitWords text={profile.firstName} animateOnMount delay={0.35} className="block" />
+          <SplitChars text={profile.firstName} delay={0.3} className="block" />
           <span className="block serif-i text-grad tracking-[-0.03em] pr-2">
             <SplitWords text={profile.lastName} animateOnMount delay={0.5} />
           </span>

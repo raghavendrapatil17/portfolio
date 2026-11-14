@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
 import { FiArrowUpRight, FiMenu, FiX } from "react-icons/fi";
 import { navLinks, profile } from "@/data/portfolio";
 import { scrollToId } from "@/lib/scroll";
-import { EASE } from "./ui/primitives";
+import { EASE, Scramble } from "./ui/primitives";
 
 export default function Navbar() {
   const [active, setActive] = useState("");
@@ -63,7 +63,7 @@ export default function Navbar() {
                   {active === l.id && (
                     <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-full bg-white/[0.07] border border-line" transition={{ type: "spring", stiffness: 380, damping: 32 }} />
                   )}
-                  <span className="relative">{l.label}</span>
+                  <Scramble className="relative" text={l.label} />
                 </button>
               </li>
             ))}

@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { FiBarChart2, FiCpu, FiLayers } from "react-icons/fi";
 import { pillars, profile, stats } from "@/data/portfolio";
-import { CountUp, Reveal, SectionHeading, spotlight } from "./ui/primitives";
+import { ClipReveal, CountUp, Reveal, SectionHeading, spotlight } from "./ui/primitives";
 
 const ICONS = { layers: FiLayers, cpu: FiCpu, chart: FiBarChart2 } as const;
 
@@ -59,12 +59,14 @@ export default function About() {
         <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-12 lg:gap-20 items-start">
           <Reveal>
             <div ref={photoRef} className="relative aspect-[4/5] rounded-[1.75rem] overflow-hidden border border-line lg:sticky lg:top-28">
+<ClipReveal className="absolute inset-0">
               <motion.img
                 src={profile.photo}
                 alt={profile.name}
                 style={{ y: imgY, scale: imgScale }}
                 className="absolute inset-0 w-full h-full object-cover object-top grayscale-[35%] hover:grayscale-0 transition-[filter] duration-700"
               />
+              </ClipReveal>
               <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/10 to-transparent" />
               <div className="absolute bottom-0 inset-x-0 p-6 flex items-end justify-between">
                 <div>

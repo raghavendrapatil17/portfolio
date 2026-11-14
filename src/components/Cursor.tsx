@@ -1,40 +1,92 @@
 "use client";
 import { useEffect, useState } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useSpring } from "framer-motion";
 
-/** Soft trailing cursor ring. Shown only for fine pointers (CSS); native cursor stays visible. */
+/**
+ * Two-part cursor: a precise dot plus a trailing ring.
+ * Over links/buttons the ring grows; over elements with data-cursor="Label"
+ * it becomes a filled disc showing that label (e.g. "View", "Open").
+ * Shown only for fine pointers (CSS); the native cursor stays visible.
+ */
 export default function Cursor() {
-  const [hover, setHover] = useState(false);
+  const [mode, setMode] = useState<{ hover: boolean; label: string | null }>({ hover: false, label: null });
+  const [down, setDown] = useState(false);
   const x = useMotionValue(-100);
   const y = useMotionValue(-100);
-  const sx = useSpring(x, { stiffness: 400, damping: 35, mass: 0.4 });
-  const sy = useSpring(y, { stiffness: 400, damping: 35, mass: 0.4 });
+  const rx = useSpring(x, { stiffness: 260, damping: 28, mass: 0.5 });
+  const ry = useSpring(y, { stiffness: 260, damping: 28, mass: 0.5 });
 
   useEffect(() => {
+    const update = (t: Element | null) => {
+      const labelled = t?.closest<HTMLElement>("[data-cursor]");
+      const label = labelled?.dataset.cursor || null;
+      const hover = !!t?.closest("a, button, [data-cursor]");
+      setMode((m) => (m.hover === hover && m.label === label ? m : { hover, label }));
+    };
     const move = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
       x.set(e.clientX);
       y.set(e.clientY);
-      const t = e.target as HTMLElement | null;
-      setHover(!!t?.closest("a, button, [data-cursor]"));
+      update(e.target as Element | null);
     };
+    // Content moves under a still mouse while scrolling — re-check what's beneath it
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => update(document.elementFromPoint(x.get(), y.get())));
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const press = () => setDown(true);
+    const release = () => setDown(false);
     window.addEventListener("pointermove", move, { passive: true });
-    return () => window.removeEventListener("pointermove", move);
+    window.addEventListener("pointerdown", press);
+    window.addEventListener("pointerup", release);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerdown", press);
+      window.removeEventListener("pointerup", release);
+    };
   }, [x, y]);
 
+  const size = mode.label ? 88 : mode.hover ? 56 : 30;
+
   return (
-    <motion.div
-      aria-hidden
-      className="hidden [@media(pointer:fine)]:block fixed top-0 left-0 z-[150] pointer-events-none rounded-full border mix-blend-difference"
-      style={{ x: sx, y: sy, translateX: "-50%", translateY: "-50%" }}
-      initial={false}
-      animate={{
-        width: hover ? 56 : 28,
-        height: hover ? 56 : 28,
-        borderColor: hover ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.45)",
-        backgroundColor: hover ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0)",
-      }}
-      transition={{ duration: 0.25 }}
-    />
+    <div aria-hidden className="hidden [@media(pointer:fine)]:block">
+      <motion.div
+        className="fixed top-0 left-0 z-[150] pointer-events-none rounded-full grid place-items-center"
+        style={{ x: rx, y: ry, translateX: "-50%", translateY: "-50%", borderWidth: 1, borderStyle: "solid" }}
+        initial={false}
+        animate={{
+          width: size,
+          height: size,
+          scale: down ? 0.85 : 1,
+          backgroundColor: mode.label ? "rgba(237,237,240,1)" : mode.hover ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0)",
+          borderColor: mode.label ? "rgba(237,237,240,0)" : "rgba(255,255,255,0.45)",
+        }}
+        transition={{ type: "spring", stiffness: 300, damping: 26 }}
+      >
+        <AnimatePresence>
+          {mode.label && (
+            <motion.span
+              key={mode.label}
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.6 }}
+              transition={{ duration: 0.2 }}
+              className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink"
+            >
+              {mode.label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.div>
+      <motion.div
+        className="fixed top-0 left-0 z-[151] pointer-events-none w-1.5 h-1.5 rounded-full bg-fg mix-blend-difference"
+        style={{ x, y, translateX: "-50%", translateY: "-50%" }}
+        animate={{ opacity: mode.label ? 0 : 1 }}
+      />
+    </div>
   );
 }

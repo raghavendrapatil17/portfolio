@@ -2,7 +2,7 @@
 import { FiArrowUp } from "react-icons/fi";
 import { navLinks, profile } from "@/data/portfolio";
 import { scrollToId } from "@/lib/scroll";
-import { Magnetic } from "./ui/primitives";
+import { Magnetic, Scramble } from "./ui/primitives";
 
 export default function Footer({ updatedAt }: { updatedAt: string | null }) {
   return (
@@ -15,7 +15,7 @@ export default function Footer({ updatedAt }: { updatedAt: string | null }) {
           </div>
           <nav className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
             {navLinks.map((l) => (
-              <button key={l.id} onClick={() => scrollToId(l.id)} className="text-muted hover:text-fg transition-colors">{l.label}</button>
+              <button key={l.id} onClick={() => scrollToId(l.id)} className="text-muted hover:text-fg transition-colors"><Scramble text={l.label} /></button>
             ))}
             <a href={profile.socials.github} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-fg transition-colors">GitHub</a>
             <a href={profile.socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-fg transition-colors">LinkedIn</a>

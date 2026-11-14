@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState, type MouseEvent } from "react";
-import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
+import { AnimatePresence, motion, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from "framer-motion";
 import { FiArrowUpRight, FiGitBranch, FiGithub, FiStar, FiX } from "react-icons/fi";
 import { projects, profile, type Project, type ProjectCategory } from "@/data/portfolio";
 import { EASE, Reveal, SectionHeading, spotlight } from "./ui/primitives";
@@ -50,7 +50,7 @@ function Cover({ p, large }: { p: Project; large?: boolean }) {
   );
 }
 
-function FeaturedCard({ p, i, live, onOpen }: { p: Project; i: number; live?: LiveRepo; onOpen: () => void }) {
+function FeaturedCard({ p, i, live, onOpen, horizontal = false }: { p: Project; i: number; live?: LiveRepo; onOpen: () => void; horizontal?: boolean }) {
   const rx = useSpring(useMotionValue(0), { stiffness: 150, damping: 18 });
   const ry = useSpring(useMotionValue(0), { stiffness: 150, damping: 18 });
   const glareX = useTransform(ry, [-6, 6], ["20%", "80%"]);
@@ -69,11 +69,11 @@ function FeaturedCard({ p, i, live, onOpen }: { p: Project; i: number; live?: Li
           onMouseMove={onMove}
           onMouseLeave={reset}
           style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }}
-          className="card group grid lg:grid-cols-2 min-h-[440px] cursor-pointer"
+          className={`card group grid lg:grid-cols-2 cursor-pointer ${horizontal ? "h-[min(72vh,620px)]" : "min-h-[440px]"}`}
           onClick={onOpen}
-          data-cursor
+          data-cursor="View"
         >
-          <div className={`relative min-h-[240px] ${i % 2 ? "lg:order-2" : ""}`}>
+          <div className={`relative min-h-[240px] ${i % 2 && !horizontal ? "lg:order-2" : ""}`}>
             <Cover p={p} large />
             <motion.div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: glare }} />
             <span className="absolute left-6 top-6 inline-flex items-center gap-2 rounded-full bg-ink/60 backdrop-blur border border-line px-3 py-1.5 text-xs">
@@ -89,7 +89,7 @@ function FeaturedCard({ p, i, live, onOpen }: { p: Project; i: number; live?: Li
             </div>
             <h3 className="text-3xl md:text-4xl font-semibold tracking-[-0.03em]">{p.title}</h3>
             <p className="serif-i text-xl text-muted mt-1">{p.subtitle}</p>
-            <p className="text-muted leading-relaxed mt-6">{p.description}</p>
+            <p className={`text-muted leading-relaxed mt-6 ${horizontal ? "line-clamp-5" : ""}`}>{p.description}</p>
             <div className="mt-auto pt-8 flex flex-col gap-4">
               <div className="flex flex-wrap gap-2">
                 {p.tags.map((t) => (
@@ -108,7 +108,7 @@ function FeaturedCard({ p, i, live, onOpen }: { p: Project; i: number; live?: Li
 function ProjectCard({ p, live, onOpen }: { p: Project; live?: LiveRepo; onOpen: () => void }) {
   return (
     <motion.div layout initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.45, ease: EASE }}>
-      <div onMouseMove={spotlight} onClick={onOpen} data-cursor className="card spotlight group h-full flex flex-col cursor-pointer">
+      <div onMouseMove={spotlight} onClick={onOpen} data-cursor="View" className="card spotlight group h-full flex flex-col cursor-pointer">
         <div className="relative h-40 border-b border-line">
           <Cover p={p} />
         </div>
@@ -174,6 +174,75 @@ function ProjectModal({ p, live, onClose }: { p: Project; live?: LiveRepo; onClo
   );
 }
 
+
+const LG_QUERY = "(min-width: 1024px)";
+function useIsDesktop() {
+  return useSyncExternalStore(
+    (cb) => { const m = window.matchMedia(LG_QUERY); m.addEventListener("change", cb); return () => m.removeEventListener("change", cb); },
+    () => window.matchMedia(LG_QUERY).matches,
+    () => false,
+  );
+}
+
+/**
+ * Desktop: the section pins to the viewport and vertical scrolling drives the
+ * featured cards sideways. Mobile / tablet: a simple vertical stack.
+ */
+type GalleryProps = { items: Project[]; liveFor: (p: Project) => LiveRepo | undefined; onOpen: (p: Project) => void };
+
+function FeaturedGallery({ items, liveFor, onOpen }: GalleryProps) {
+  const desktop = useIsDesktop();
+  if (desktop) return <PinnedGallery items={items} liveFor={liveFor} onOpen={onOpen} />;
+  return (
+    <div className="mx-auto max-w-6xl px-5 sm:px-8 flex flex-col gap-6">
+      {items.map((p, i) => <FeaturedCard key={p.slug} p={p} i={i} live={liveFor(p)} onOpen={() => onOpen(p)} />)}
+    </div>
+  );
+}
+
+function PinnedGallery({ items, liveFor, onOpen }: GalleryProps) {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [distance, setDistance] = useState(0);
+  const [active, setActive] = useState(0);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
+  const smooth = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.3 });
+  const x = useTransform(smooth, [0, 1], [0, -distance]);
+  const bar = useTransform(smooth, [0, 1], ["0%", "100%"]);
+  useMotionValueEvent(scrollYProgress, "change", (v) => setActive(Math.min(items.length - 1, Math.round(v * (items.length - 1)))));
+
+  useLayoutEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const ro = new ResizeObserver(() => setDistance(Math.max(0, track.scrollWidth - window.innerWidth)));
+    ro.observe(track);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div ref={sectionRef} style={{ height: `calc(100vh + ${distance}px)` }} className="relative">
+      <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-center">
+        <motion.div ref={trackRef} style={{ x }} className="flex gap-8 w-max pl-[max(2rem,calc((100vw-72rem)/2+2rem))] pr-[12vw]">
+          {items.map((p, i) => (
+            <div key={p.slug} className="w-[min(1080px,78vw)] shrink-0">
+              <FeaturedCard p={p} i={i} live={liveFor(p)} onOpen={() => onOpen(p)} horizontal />
+            </div>
+          ))}
+        </motion.div>
+        <div className="mx-auto w-full max-w-6xl px-8 mt-10 flex items-center gap-6">
+          <span className="font-mono text-xs text-muted tabular-nums">
+            {String(active + 1).padStart(2, "0")} <span className="text-dim">/ {String(items.length).padStart(2, "0")}</span>
+          </span>
+          <div className="relative h-px flex-1 bg-line overflow-hidden">
+            <motion.div className="absolute inset-y-0 left-0" style={{ width: bar, background: "var(--grad)" }} />
+          </div>
+          <span className="eyebrow !text-[0.65rem]">Scroll</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const FILTERS: ("All" | ProjectCategory)[] = ["All", "AI / ML", "Data Science", "Full-Stack"];
 
 export default function Projects({ live, recent }: { live: LiveMap | null; recent: LiveRepo[] | null }) {
@@ -197,10 +266,11 @@ export default function Projects({ live, recent }: { live: LiveMap | null; recen
           description="AI systems, data products and full-stack applications — several backed by peer-reviewed research."
         />
 
-        <div className="flex flex-col gap-6">
-          {featured.map((p, i) => <FeaturedCard key={p.slug} p={p} i={i} live={liveFor(p)} onOpen={() => setOpen(p)} />)}
-        </div>
+      </div>
 
+      <FeaturedGallery items={featured} liveFor={liveFor} onOpen={setOpen} />
+
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <div className="mt-24 flex flex-wrap items-end justify-between gap-6 mb-8">
           <Reveal><h3 className="text-2xl md:text-3xl font-semibold tracking-tight">More projects</h3></Reveal>
           <div className="flex flex-wrap gap-1 p-1 rounded-full border border-line bg-white/[0.02]">

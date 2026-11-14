@@ -3,17 +3,19 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiAward, FiMaximize2, FiX } from "react-icons/fi";
 import { certifications, research } from "@/data/portfolio";
-import { EASE, Reveal, SectionHeading, spotlight } from "./ui/primitives";
+import { ClipReveal, EASE, Reveal, SectionHeading, spotlight } from "./ui/primitives";
 
 type Cert = (typeof certifications)[number];
 
 function CertCard({ c, i, onOpen }: { c: Cert; i: number; onOpen: () => void }) {
   return (
     <Reveal delay={i * 0.06}>
-      <button onMouseMove={spotlight} onClick={onOpen} className="card spotlight group w-full text-left h-full flex flex-col">
+      <button onMouseMove={spotlight} onClick={onOpen} data-cursor="Open" className="card spotlight group w-full text-left h-full flex flex-col">
         <div className="relative aspect-[16/10] overflow-hidden border-b border-line bg-raised">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+          <ClipReveal className="w-full h-full" delay={0.1 + i * 0.08} from="left">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+          </ClipReveal>
           <span className="absolute right-3 top-3 grid place-items-center w-8 h-8 rounded-full bg-ink/70 backdrop-blur border border-line opacity-0 group-hover:opacity-100 transition-opacity">
             <FiMaximize2 size={13} />
           </span>
