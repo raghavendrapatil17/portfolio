@@ -11,7 +11,7 @@ export default function Experience() {
 
   return (
     <section id="experience" className="relative py-28 md:py-40">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      <div className="mx-auto max-w-[var(--container)] px-5 sm:px-8">
         <SectionHeading index="04" eyebrow="Experience" title="Where I've" accent="made an impact." />
 
         <ol ref={listRef} className="relative">

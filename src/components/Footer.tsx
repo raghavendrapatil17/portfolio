@@ -7,7 +7,7 @@ import { Magnetic, Scramble } from "./ui/primitives";
 export default function Footer({ updatedAt }: { updatedAt: string | null }) {
   return (
     <footer className="relative border-t border-line overflow-hidden">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-16 pb-8">
+      <div className="mx-auto max-w-[var(--container)] px-5 sm:px-8 pt-16 pb-8">
         <div className="flex flex-wrap items-start justify-between gap-10">
           <div className="max-w-sm">
             <div className="text-sm text-muted">Designed & engineered by</div>

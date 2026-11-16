@@ -82,7 +82,7 @@ export default function Contact() {
   return (
     <section id="contact" className="relative py-28 md:py-40 overflow-hidden">
       <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-accent/15 blur-[160px] pointer-events-none" />
-      <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
+      <div className="relative mx-auto max-w-[var(--container)] px-5 sm:px-8">
         <Reveal className="flex items-center gap-3 mb-6">
           <span className="font-mono text-xs text-accent">06</span>
           <span className="h-px w-10 bg-line" />
@@ -95,13 +95,13 @@ export default function Contact() {
           <span className="serif-i text-grad pr-2"><SplitWords text="something great." delay={0.15} /></span>
         </h2>
 
-          <Reveal delay={0.25}>
+          <Reveal delay={0.25} className="ml-auto sm:ml-0">
             <Magnetic strength={0.45}>
               <a
                 href={`mailto:${profile.email}`}
                 data-cursor="Email"
                 aria-label={`Email ${profile.email}`}
-                className="cta group relative grid place-items-center w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden isolate border border-line"
+                className="cta group relative grid place-items-center w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full overflow-hidden isolate border border-line"
               >
                 <span className="absolute inset-0 -z-10 rounded-full scale-0 group-hover:scale-100 transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)]" style={{ background: "var(--grad)" }} />
                 <svg viewBox="0 0 200 200" className="cta-ring absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)]" aria-hidden>
@@ -127,7 +127,7 @@ export default function Contact() {
                 <a href={`mailto:${profile.email}`} className="btn btn-solid"><FiMail /> {profile.email}</a>
               </Magnetic>
               <button onClick={copyEmail} className="btn btn-ghost !px-4" aria-label="Copy email address">
-                {copied ? <><FiCheck className="text-ok" /> Copied</> : <><FiCopy /> Copy</>}
+                {copied ? <><FiCheck className="text-ok" /> <span className="hidden sm:inline">Copied</span></> : <><FiCopy /> <span className="hidden sm:inline">Copy</span></>}
               </button>
             </div>
 

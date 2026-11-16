@@ -40,6 +40,10 @@ export const profile = {
     "My work lives at the intersection of enterprise software and artificial intelligence — from RAG-powered healthcare assistants to Power BI dashboards that turn raw data into decisions.",
     "With an MCA from KLE Institute of Technology (9.2 GPA) and research presented at international conferences, I pair academic rigour with hands-on engineering.",
   ],
+  /** Short About copy for the bento grid */
+  headline: "I build enterprise software by day — and intelligent systems by design.",
+  summary:
+    "Angular and Dynamics 365 CRM at RealtySlices; LLMs, RAG pipelines and ML models on the side. Research presented at two international conferences.",
   mission:
     "To build intelligent, scalable software that bridges enterprise systems with the future of AI — creating real impact for real people.",
 };
@@ -69,72 +73,75 @@ export const stats = [
   { value: 1, decimals: 0, suffix: "+", label: "Years in industry" },
 ];
 
-export const skillGroups = [
+/**
+ * Skills shown in the "stack explorer". `tier` replaces percentage bars (which
+ * read as arbitrary); `note` says where the tool was actually used. Leave
+ * `note` out rather than guess. `icon` is a key in components/Skills.tsx.
+ */
+export type SkillTier = "Expert" | "Advanced" | "Proficient";
+export type Skill = { name: string; icon: string; tier: SkillTier; note?: string };
+
+export const skillGroups: { category: string; blurb: string; skills: Skill[] }[] = [
   {
     category: "AI / ML",
-    blurb: "LLM apps, retrieval pipelines and classic ML.",
+    blurb: "LLM apps, retrieval pipelines and classic machine learning.",
     skills: [
-      { name: "LLMs & RAG", level: 82 },
-      { name: "Scikit-learn", level: 85 },
-      { name: "LangChain", level: 78 },
-      { name: "Agentic AI", level: 75 },
+      { name: "LLMs & RAG", icon: "brain", tier: "Advanced", note: "Dr. Healify AI · NextHire AI" },
+      { name: "LangChain", icon: "langchain", tier: "Advanced", note: "Dr. Healify AI · NextHire AI" },
+      { name: "Scikit-learn", icon: "sklearn", tier: "Expert", note: "96.58% disease-prediction model" },
+      { name: "TensorFlow", icon: "tensorflow", tier: "Advanced", note: "Mango disease detection (NKCon '25)" },
+      { name: "Agentic AI", icon: "robot", tier: "Proficient", note: "Microsoft Agent in a Day" },
     ],
-    span: "lg:col-span-2",
   },
   {
     category: "Microsoft Stack",
     blurb: "Dynamics 365, Dataverse and the Power Platform.",
     skills: [
-      { name: "Dynamics 365 CRM", level: 85 },
-      { name: "Power BI", level: 88 },
-      { name: "Power Apps", level: 82 },
-      { name: "Power Automate", level: 80 },
+      { name: "Dynamics 365 CRM", icon: "microsoft", tier: "Expert", note: "RealtySlices" },
+      { name: "Power BI", icon: "chart", tier: "Expert", note: "Cognizant · US real-estate dashboard" },
+      { name: "Power Apps", icon: "apps", tier: "Advanced", note: "RealtySlices" },
+      { name: "Power Automate", icon: "automation", tier: "Advanced", note: "RealtySlices" },
     ],
-    span: "",
   },
   {
-    category: "Web Development",
+    category: "Web",
     blurb: "Component-driven, responsive interfaces.",
     skills: [
-      { name: "Angular", level: 90 },
-      { name: "React.js", level: 80 },
-      { name: "Flask", level: 85 },
-      { name: "Bootstrap", level: 78 },
+      { name: "Angular", icon: "angular", tier: "Expert", note: "Daily at RealtySlices" },
+      { name: "React", icon: "react", tier: "Advanced", note: "This portfolio" },
+      { name: "Flask", icon: "flask", tier: "Expert", note: "Healify · Plagiarism Checker · Art Gallery" },
+      { name: "Bootstrap", icon: "bootstrap", tier: "Advanced", note: "Online Art Gallery" },
     ],
-    span: "",
   },
   {
-    category: "Programming",
+    category: "Languages",
     blurb: "Typed, tested, maintainable code.",
     skills: [
-      { name: "Python", level: 88 },
-      { name: "TypeScript", level: 82 },
-      { name: "C#", level: 72 },
-      { name: "Java", level: 68 },
+      { name: "Python", icon: "python", tier: "Expert", note: "All AI / ML projects" },
+      { name: "TypeScript", icon: "typescript", tier: "Advanced", note: "RealtySlices · this site" },
+      { name: "C#", icon: "csharp", tier: "Proficient" },
+      { name: "Java", icon: "java", tier: "Proficient" },
     ],
-    span: "",
   },
   {
     category: "Cloud & DevOps",
     blurb: "Containers and cloud deployment.",
     skills: [
-      { name: "AWS", level: 75 },
-      { name: "Docker", level: 72 },
-      { name: "Azure", level: 70 },
-      { name: "Kubernetes", level: 65 },
+      { name: "AWS", icon: "aws", tier: "Advanced", note: "AWS Cloud Practitioner" },
+      { name: "Docker", icon: "docker", tier: "Proficient" },
+      { name: "Azure", icon: "azure", tier: "Proficient" },
+      { name: "Kubernetes", icon: "kubernetes", tier: "Proficient" },
     ],
-    span: "",
   },
   {
-    category: "Data & Storage",
-    blurb: "Relational and vector databases.",
+    category: "Data",
+    blurb: "Relational stores and vector databases.",
     skills: [
-      { name: "MySQL", level: 84 },
-      { name: "Oracle SQL", level: 78 },
-      { name: "FAISS", level: 72 },
-      { name: "ChromaDB", level: 70 },
+      { name: "MySQL", icon: "mysql", tier: "Advanced", note: "Online Art Gallery" },
+      { name: "Oracle SQL", icon: "sql", tier: "Advanced" },
+      { name: "FAISS", icon: "vector", tier: "Proficient", note: "Vector search for RAG" },
+      { name: "ChromaDB", icon: "database", tier: "Proficient", note: "Vector search for RAG" },
     ],
-    span: "lg:col-span-2",
   },
 ];
 

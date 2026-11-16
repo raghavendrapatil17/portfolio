@@ -44,7 +44,7 @@ export default function Navbar() {
         className="fixed top-4 inset-x-0 z-[110] px-4"
       >
         <nav
-          className={`mx-auto max-w-6xl flex items-center justify-between rounded-full pl-2 pr-2 py-2 transition-all duration-500 ${
+          className={`mx-auto max-w-[var(--container)] flex items-center justify-between rounded-full pl-2 pr-2 py-2 transition-all duration-500 ${
             scrolled ? "bg-ink/70 backdrop-blur-xl border border-line shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)]" : "border border-transparent"
           }`}
         >

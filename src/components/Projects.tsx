@@ -262,7 +262,7 @@ function FeaturedGallery({ items, liveFor, onOpen }: GalleryProps) {
   const reduced = useReducedMotionPref();
   if (desktop && !reduced) return <PinnedGallery items={items} liveFor={liveFor} onOpen={onOpen} />;
   return (
-    <div className="mx-auto max-w-6xl px-5 sm:px-8 flex flex-col gap-6">
+    <div className="mx-auto max-w-[var(--container)] px-5 sm:px-8 flex flex-col gap-6">
       {items.map((p, i) => <FeaturedCard key={p.slug} p={p} i={i} live={liveFor(p)} onOpen={(el) => onOpen(p, el)} />)}
     </div>
   );
@@ -290,14 +290,14 @@ function PinnedGallery({ items, liveFor, onOpen }: GalleryProps) {
   return (
     <div ref={sectionRef} style={{ height: `calc(100vh + ${distance}px)` }} className="relative">
       <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-center">
-        <motion.div ref={trackRef} style={{ x }} className="flex gap-8 w-max pl-[max(2rem,calc((100vw-72rem)/2+2rem))] pr-[12vw]">
+        <motion.div ref={trackRef} style={{ x }} className="flex gap-8 w-max pl-[max(2rem,calc((100vw-var(--container))/2+2rem))] pr-[12vw]">
           {items.map((p, i) => (
             <div key={p.slug} className="w-[min(1080px,78vw)] shrink-0">
               <FeaturedCard p={p} i={i} live={liveFor(p)} onOpen={(el) => onOpen(p, el)} horizontal />
             </div>
           ))}
         </motion.div>
-        <div className="mx-auto w-full max-w-6xl px-8 mt-10 flex items-center gap-6">
+        <div className="mx-auto w-full max-w-[var(--container)] px-8 mt-10 flex items-center gap-6">
           <span className="font-mono text-xs text-muted tabular-nums">
             {String(active + 1).padStart(2, "0")} <span className="text-dim">/ {String(items.length).padStart(2, "0")}</span>
           </span>
@@ -332,7 +332,7 @@ export default function Projects({ live, recent }: { live: LiveMap | null; recen
   return (
     <OpenSlug.Provider value={open?.p.slug ?? null}>
     <section id="work" className="relative py-28 md:py-40">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      <div className="mx-auto max-w-[var(--container)] px-5 sm:px-8">
         <SectionHeading
           index="03"
           eyebrow="Selected work"
@@ -345,7 +345,7 @@ export default function Projects({ live, recent }: { live: LiveMap | null; recen
 
       <FeaturedGallery items={featured} liveFor={liveFor} onOpen={openProject} />
 
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      <div className="mx-auto max-w-[var(--container)] px-5 sm:px-8">
         <div className="mt-24 flex flex-wrap items-end justify-between gap-6 mb-8">
           <Reveal><h3 className="text-2xl md:text-3xl font-semibold tracking-tight">More projects</h3></Reveal>
           <div className="flex flex-wrap gap-1 p-1 rounded-full border border-line bg-white/[0.02]">

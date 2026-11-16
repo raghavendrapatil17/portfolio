@@ -1,111 +1,182 @@
 "use client";
-import { useRef } from "react";
-import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { FiBarChart2, FiCpu, FiLayers } from "react-icons/fi";
-import { pillars, profile, stats } from "@/data/portfolio";
-import { ClipReveal, CountUp, Reveal, SectionHeading, spotlight } from "./ui/primitives";
+import { useRef, type MouseEvent, type ReactNode } from "react";
+import { motion, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
+import { FiArrowUpRight, FiBarChart2, FiCpu, FiLayers, FiMapPin } from "react-icons/fi";
+import { education, experience, pillars, profile, stats } from "@/data/portfolio";
+import { scrollToId } from "@/lib/scroll";
+import LocalTime from "./ui/LocalTime";
+import { ClipReveal, CountUp, EASE, SectionHeading, SplitWords, spotlight } from "./ui/primitives";
 
 const ICONS = { layers: FiLayers, cpu: FiCpu, chart: FiBarChart2 } as const;
 
-function Word({ word, progress, range }: { word: string; progress: MotionValue<number>; range: [number, number] }) {
-  const opacity = useTransform(progress, range, [0.18, 1]);
+/** A bento tile: rises in with a slight scale, staggered by `i`, with the cursor spotlight. */
+function Tile({ children, className = "", i = 0 }: { children: ReactNode; className?: string; i?: number }) {
   return (
-    <motion.span style={{ opacity }} className="inline">
-      {word}{" "}
-    </motion.span>
+    <motion.div
+      initial={{ opacity: 0, y: 36, scale: 0.97 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.8, ease: EASE, delay: (i % 4) * 0.07 }}
+      onMouseMove={spotlight}
+      className={`card spotlight ${className}`}
+    >
+      {children}
+    </motion.div>
   );
 }
 
-/** Paragraph whose words light up as you scroll through it. */
-function ScrollText({ text }: { text: string }) {
-  const ref = useRef<HTMLParagraphElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 85%", "end 45%"] });
-  const words = text.split(" ");
+/** Portrait that tilts toward the cursor and drifts with scroll. */
+function Portrait() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const imgY = useTransform(scrollYProgress, [0, 1], ["-6%", "6%"]);
+  const rx = useSpring(useMotionValue(0), { stiffness: 150, damping: 18 });
+  const ry = useSpring(useMotionValue(0), { stiffness: 150, damping: 18 });
+  const onMove = (e: MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    ry.set(((e.clientX - r.left) / r.width - 0.5) * 8);
+    rx.set(-((e.clientY - r.top) / r.height - 0.5) * 8);
+  };
   return (
-    <p ref={ref} className="text-2xl sm:text-3xl md:text-[2.4rem] leading-[1.25] font-medium tracking-[-0.02em]">
-      {words.map((w, i) => (
-        <Word key={i} word={w} progress={scrollYProgress} range={[i / words.length, (i + 1) / words.length]} />
-      ))}
-    </p>
-  );
-}
-
-function Pillar({ p, i }: { p: (typeof pillars)[number]; i: number }) {
-  const Icon = ICONS[p.icon];
-  return (
-    <Reveal delay={i * 0.08}>
-      <div onMouseMove={spotlight} className="card spotlight p-7 h-full">
-        <div className="w-11 h-11 grid place-items-center rounded-xl border border-line bg-white/[0.03] text-accent mb-6">
-          <Icon size={18} />
+    <div style={{ perspective: 1000 }} className="h-full">
+      <motion.div
+        ref={ref}
+        onMouseMove={onMove}
+        onMouseLeave={() => { rx.set(0); ry.set(0); }}
+        style={{ rotateX: rx, rotateY: ry }}
+        className="relative h-full min-h-[22rem] sm:min-h-[26rem] rounded-[1.5rem] overflow-hidden border border-line group"
+      >
+        <ClipReveal className="absolute inset-0">
+          <motion.img
+            src={profile.photo}
+            alt={profile.name}
+            style={{ y: imgY }}
+            className="absolute inset-0 w-full h-[112%] -top-[6%] object-cover object-top grayscale-[40%] group-hover:grayscale-0 group-hover:scale-[1.03] transition-[filter,transform] duration-700"
+          />
+        </ClipReveal>
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/5 to-transparent" />
+        {profile.available && (
+          <span className="absolute top-4 right-4 inline-flex items-center gap-2 rounded-full bg-ink/70 backdrop-blur border border-line px-3 py-1.5 text-xs">
+            <span className="live-dot !w-1.5 !h-1.5" /> Available
+          </span>
+        )}
+        <div className="absolute bottom-0 inset-x-0 p-5">
+          <div className="font-semibold tracking-tight">{profile.name}</div>
+          <div className="text-sm text-muted">{profile.role}</div>
         </div>
-        <h3 className="text-lg font-semibold tracking-tight mb-2">{p.title}</h3>
-        <p className="text-muted leading-relaxed text-[0.95rem]">{p.body}</p>
-      </div>
-    </Reveal>
+      </motion.div>
+    </div>
   );
 }
 
 export default function About() {
-  const photoRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: photoRef, offset: ["start end", "end start"] });
-  const imgY = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
-  const imgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.15, 1.05, 1.15]);
+  const current = experience.find((e) => e.current) ?? experience[0];
+  const degree = education[0];
 
   return (
-    <section id="about" className="relative py-28 md:py-40">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+    <section id="about" className="relative py-24 md:py-36">
+      <div className="mx-auto max-w-[var(--container)] px-5 sm:px-8">
         <SectionHeading index="01" eyebrow="About" title="Engineer by craft," accent="curious by nature." />
 
-        <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-12 lg:gap-20 items-start">
-          {/* Sticky on the grid item itself so it has the whole row's height to pin within */}
-          <Reveal className="lg:sticky lg:top-28">
-            <div ref={photoRef} className="relative aspect-[4/5] rounded-[1.75rem] overflow-hidden border border-line">
-<ClipReveal className="absolute inset-0">
-              <motion.img
-                src={profile.photo}
-                alt={profile.name}
-                style={{ y: imgY, scale: imgScale }}
-                className="absolute inset-0 w-full h-full object-cover object-top grayscale-[35%] hover:grayscale-0 transition-[filter] duration-700"
-              />
-              </ClipReveal>
-              <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/10 to-transparent" />
-              <div className="absolute bottom-0 inset-x-0 p-6 flex items-end justify-between">
-                <div>
-                  <div className="font-semibold tracking-tight">{profile.name}</div>
-                  <div className="text-sm text-muted">{profile.role}</div>
-                </div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-ink/70 backdrop-blur border border-line px-3 py-1.5 text-xs">
-                  <span className="live-dot !w-1.5 !h-1.5" /> {profile.location.split(",")[0]}
-                </span>
-              </div>
+        {/*  Bento: 1 col (phone) → 2 cols (tablet) → 4 cols (desktop)  */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:auto-rows-[minmax(11rem,auto)]">
+          {/* Portrait: tall tile */}
+          <motion.div
+            initial={{ opacity: 0, y: 36 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.9, ease: EASE }}
+            className="md:row-span-2 lg:row-span-2"
+          >
+            <Portrait />
+          </motion.div>
+
+          {/* Intro */}
+          <Tile i={1} className="p-6 sm:p-8 lg:col-span-2 flex flex-col justify-between gap-6">
+            <span className="eyebrow">Hello, I&apos;m {profile.firstName}</span>
+            <h3 className="text-2xl sm:text-3xl lg:text-[2.1rem] font-semibold tracking-[-0.03em] leading-[1.15]">
+              <SplitWords text={profile.headline} stagger={0.035} />
+            </h3>
+            <p className="text-muted leading-relaxed max-w-xl">{profile.summary}</p>
+          </Tile>
+
+          {/* Currently */}
+          <Tile i={2} className="p-6 flex flex-col justify-between gap-5">
+            <div className="flex items-center justify-between">
+              <span className="eyebrow">Currently</span>
+              <span className="live-dot" />
             </div>
-          </Reveal>
+            <div>
+              <div className="text-lg font-semibold tracking-tight leading-snug">{current.role}</div>
+              <div className="serif-i text-xl text-grad">@ {current.company}</div>
+              <div className="font-mono text-xs text-dim mt-2">{current.period}</div>
+            </div>
+            <button onClick={() => scrollToId("experience")} className="link-u self-start text-sm text-muted hover:text-fg inline-flex items-center gap-1">
+              Experience <FiArrowUpRight size={13} />
+            </button>
+          </Tile>
 
-          <div className="flex flex-col gap-14">
-            <ScrollText text={profile.about.join(" ")} />
-
-            <Reveal>
-              <blockquote className="relative border-l-2 pl-6" style={{ borderImage: "var(--grad) 1" }}>
-                <span className="eyebrow block mb-3">Mission</span>
-                <p className="serif-i text-2xl md:text-3xl leading-snug text-fg/90">“{profile.mission}”</p>
-              </blockquote>
-            </Reveal>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden border border-line bg-line">
-              {stats.map((s, i) => (
-                <Reveal key={s.label} delay={i * 0.06} className="bg-ink p-5">
-                  <div className="text-3xl md:text-4xl font-semibold tracking-tight">
+          {/* Stats (hairline grid: 2×2 on phones, 4 across from sm) */}
+          <Tile i={3} className="md:col-span-2 lg:col-span-2 p-0">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-line h-full">
+              {stats.map((s) => (
+                <div key={s.label} className="bg-surface/95 p-5 sm:p-6 flex flex-col justify-end">
+                  <div className="text-3xl sm:text-4xl font-semibold tracking-tight">
                     <CountUp value={s.value} decimals={s.decimals} suffix={s.suffix} />
                   </div>
                   <div className="mt-1 text-xs text-muted">{s.label}</div>
-                </Reveal>
+                </div>
               ))}
             </div>
-          </div>
-        </div>
+          </Tile>
 
-        <div className="mt-20 grid md:grid-cols-3 gap-4">
-          {pillars.map((p, i) => <Pillar key={p.title} p={p} i={i} />)}
+          {/* Location + live time */}
+          <Tile i={4} className="p-6 flex flex-col justify-between gap-6 overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="eyebrow">Based in</span>
+              <span className="relative grid place-items-center w-8 h-8">
+                <motion.span
+                  className="absolute inset-0 rounded-full border border-accent/50"
+                  animate={{ scale: [1, 1.9], opacity: [0.7, 0] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
+                />
+                <FiMapPin className="text-accent" />
+              </span>
+            </div>
+            <div>
+              <div className="text-lg font-semibold tracking-tight">{profile.location}</div>
+              <div className="font-mono text-3xl mt-1 text-fg/90"><LocalTime seconds /></div>
+              <div className="font-mono text-[11px] text-dim">IST · UTC+05:30</div>
+            </div>
+          </Tile>
+
+          {/* Strengths */}
+          {pillars.map((p, idx) => {
+            const Icon = ICONS[p.icon];
+            return (
+              <Tile key={p.title} i={5 + idx} className="p-6 flex flex-col gap-4">
+                <motion.span
+                  whileHover={{ rotate: -10, scale: 1.1 }}
+                  className="grid place-items-center w-11 h-11 rounded-xl border border-line bg-white/[0.03] text-accent"
+                >
+                  <Icon size={18} />
+                </motion.span>
+                <div>
+                  <h3 className="font-semibold tracking-tight mb-1.5">{p.title}</h3>
+                  <p className="text-muted leading-relaxed text-sm">{p.body}</p>
+                </div>
+              </Tile>
+            );
+          })}
+
+          {/* Mission + education */}
+          <Tile i={8} className="p-6 flex flex-col justify-between gap-5 md:col-span-2 lg:col-span-1">
+            <span className="eyebrow">Mission</span>
+            <p className="serif-i text-xl leading-snug text-fg/90">“{profile.mission}”</p>
+            <div className="text-xs text-muted border-t border-line pt-4">
+              {degree.degree} · <span className="text-fg">{degree.score.split(" ")[0]} GPA</span>
+            </div>
+          </Tile>
         </div>
       </div>
     </section>

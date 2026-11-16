@@ -8,6 +8,7 @@ import { scrollToId } from "@/lib/scroll";
 import { useIntroDone } from "@/lib/motion";
 import { useHud } from "@/lib/latentHud";
 import { EASE, Magnetic, SplitChars, SplitWords } from "./ui/primitives";
+import LocalTime from "./ui/LocalTime";
 
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
 
@@ -18,17 +19,6 @@ function since(iso: string) {
   return days === 0 ? "Today" : days < 30 ? `${days}d ago` : `${Math.floor(days / 30)}mo ago`;
 }
 
-function LocalTime() {
-  const [time, setTime] = useState<string>("");
-  useEffect(() => {
-    const fmt = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: profile.timezone });
-    const update = () => setTime(fmt.format(new Date()));
-    update();
-    const id = setInterval(update, 15_000);
-    return () => clearInterval(id);
-  }, []);
-  return <span className="tabular-nums">{time || "--:--"}</span>;
-}
 
 function RoleRotator() {
   const [i, setI] = useState(0);
@@ -64,7 +54,7 @@ function RetrievalHud({ ready }: { ready: boolean }) {
       transition={{ duration: 1, delay: 1.2, ease: EASE }}
       className="pointer-events-none absolute inset-x-0 top-24 z-10 hidden lg:block"
     >
-      <div className="mx-auto max-w-6xl px-8 flex justify-end">
+      <div className="mx-auto max-w-[var(--container)] px-8 flex justify-end">
         <div className="rounded-xl border border-line bg-ink/50 backdrop-blur-md px-3 py-2 font-mono text-[10px] leading-5">
           <div className="flex items-center gap-2 text-dim uppercase tracking-[0.18em]">
             <span className="live-dot !w-1.5 !h-1.5" /> vector search
@@ -128,7 +118,7 @@ export default function Hero({ stats }: { stats: HeroStats }) {
 
       <RetrievalHud ready={ready} />
 
-      <motion.div style={{ y: textY, opacity: textOpacity, filter: textBlur }} className="relative z-10 flex-1 flex flex-col justify-center mx-auto w-full max-w-6xl px-5 sm:px-8 pt-28 pb-8">
+      <motion.div style={{ y: textY, opacity: textOpacity, filter: textBlur }} className="relative z-10 flex-1 flex flex-col justify-center mx-auto w-full max-w-[var(--container)] px-5 sm:px-8 pt-28 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={ready ? { opacity: 1, y: 0 } : undefined}
@@ -186,7 +176,7 @@ export default function Hero({ stats }: { stats: HeroStats }) {
         initial={{ opacity: 0 }}
         animate={ready ? { opacity: 1 } : undefined}
         transition={{ delay: 1.05, duration: 1 }}
-        className="relative z-10 mx-auto w-full max-w-6xl px-5 sm:px-8 pb-8"
+        className="relative z-10 mx-auto w-full max-w-[var(--container)] px-5 sm:px-8 pb-8"
       >
         <div className="flex flex-wrap items-end justify-between gap-6 border-t border-line pt-6">
           <div className="flex items-center gap-2">

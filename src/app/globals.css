@@ -19,6 +19,8 @@
 
 :root {
   color-scheme: dark;
+  /* Content width: grows on very large monitors so wide screens aren't mostly empty */
+  --container: 72rem;
   --grad: linear-gradient(100deg, #c4b5fd 0%, #8b7bff 35%, #60a5fa 65%, #22d3ee 100%);
 }
 
@@ -195,3 +197,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+@media (min-width: 1536px) { :root { --container: 80rem; } }
+@media (min-width: 1920px) { :root { --container: 88rem; } }

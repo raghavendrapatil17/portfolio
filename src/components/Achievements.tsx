@@ -63,7 +63,7 @@ export default function Achievements() {
   const [open, setOpen] = useState<Cert | null>(null);
   return (
     <section id="recognition" className="relative py-28 md:py-40">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      <div className="mx-auto max-w-[var(--container)] px-5 sm:px-8">
         <SectionHeading index="05" eyebrow="Recognition" title="Research &" accent="credentials." />
 
         <div className="grid md:grid-cols-2 gap-4">
