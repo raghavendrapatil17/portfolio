@@ -11,7 +11,7 @@ import { VscAzure } from "react-icons/vsc";
 import {
   TbApps, TbAutomation, TbBrain, TbBrandCSharp, TbChartBar, TbDatabase, TbRobot, TbSql, TbVectorTriangle,
 } from "react-icons/tb";
-import { skillGroups, type Skill, type SkillTier } from "@/data/portfolio";
+import { skillGroups, tierLegend, type Skill, type SkillTier } from "@/data/portfolio";
 import { EASE, Reveal, SectionHeading, spotlight } from "./ui/primitives";
 
 type Lang = { name: string; count: number };
@@ -44,12 +44,12 @@ const ICONS: Record<string, { Icon: IconType; color: string }> = {
   database: { Icon: TbDatabase, color: "#fb7185" },
 };
 
-const TIER_DOTS: Record<SkillTier, number> = { Expert: 3, Advanced: 2, Proficient: 1 };
+const TIER_DOTS: Record<SkillTier, number> = { Production: 3, Projects: 2, Familiar: 1 };
 
 function TierMeter({ tier }: { tier: SkillTier }) {
   const n = TIER_DOTS[tier];
   return (
-    <span className="inline-flex items-center gap-2 text-[11px] text-muted" aria-label={`${tier} level`}>
+    <span className="inline-flex items-center gap-2 text-[11px] text-muted" aria-label={`${tier}: ${tierLegend[tier]}`} title={tierLegend[tier]}>
       <span className="flex gap-1" aria-hidden>
         {[1, 2, 3].map((d) => (
           <motion.span
@@ -154,6 +154,21 @@ export default function Skills({ languages }: { languages: Lang[] | null }) {
             </motion.div>
           </AnimatePresence>
         </div>
+
+        <Reveal>
+          <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs text-dim">
+            {(Object.keys(tierLegend) as SkillTier[]).map((t) => (
+              <li key={t} className="flex items-center gap-2">
+                <span className="flex gap-0.5" aria-hidden>
+                  {[1, 2, 3].map((d) => (
+                    <span key={d} className="h-1 w-2.5 rounded-full" style={{ background: d <= TIER_DOTS[t] ? "var(--color-accent)" : "rgb(255 255 255 / 0.1)" }} />
+                  ))}
+                </span>
+                <span className="text-muted">{t}</span> — {tierLegend[t]}
+              </li>
+            ))}
+          </ul>
+        </Reveal>
 
         {languages && languages.length > 0 && (
           <Reveal className="mt-10">

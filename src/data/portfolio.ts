@@ -21,6 +21,7 @@ export const profile = {
   logo: "/certs/new logo.png",
   resume: "/certs/Raghavendra_Patil_Resume_.pdf",
   available: true,
+  site: "https://portfolio-raghavendra-patil.vercel.app",
   githubUser: "raghavendrapatil17",
   socials: {
     github: "https://github.com/raghavendrapatil17",
@@ -70,77 +71,85 @@ export const stats = [
   { value: 9.2, decimals: 1, suffix: "", label: "MCA GPA" },
   { value: 96.58, decimals: 1, suffix: "%", label: "Best model accuracy" },
   { value: 2, decimals: 0, suffix: "", label: "Research papers" },
-  { value: 1, decimals: 0, suffix: "+", label: "Years in industry" },
+  { value: 2, decimals: 0, suffix: "", label: "Industry roles" },
 ];
 
 /**
- * Skills shown in the "stack explorer". `tier` replaces percentage bars (which
- * read as arbitrary); `note` says where the tool was actually used. Leave
- * `note` out rather than guess. `icon` is a key in components/Skills.tsx.
+ * Skills shown in the "stack explorer". `tier` is evidence, not a self-rating:
+ *   "Production" — used in a paid role
+ *   "Projects"   — used in a shipped project (see `note`)
+ *   "Familiar"   — coursework, certification or light use
+ * `note` says where. Leave it out rather than guess. `icon` is a key in components/Skills.tsx.
  */
-export type SkillTier = "Expert" | "Advanced" | "Proficient";
+export type SkillTier = "Production" | "Projects" | "Familiar";
 export type Skill = { name: string; icon: string; tier: SkillTier; note?: string };
+
+export const tierLegend: Record<SkillTier, string> = {
+  Production: "used in a paid role",
+  Projects: "used in a shipped project",
+  Familiar: "coursework, certification or light use",
+};
 
 export const skillGroups: { category: string; blurb: string; skills: Skill[] }[] = [
   {
     category: "AI / ML",
     blurb: "LLM apps, retrieval pipelines and classic machine learning.",
     skills: [
-      { name: "LLMs & RAG", icon: "brain", tier: "Advanced", note: "Dr. Healify AI · NextHire AI" },
-      { name: "LangChain", icon: "langchain", tier: "Advanced", note: "Dr. Healify AI · NextHire AI" },
-      { name: "Scikit-learn", icon: "sklearn", tier: "Expert", note: "96.58% disease-prediction model" },
-      { name: "TensorFlow", icon: "tensorflow", tier: "Advanced", note: "Mango disease detection (NKCon '25)" },
-      { name: "Agentic AI", icon: "robot", tier: "Proficient", note: "Microsoft Agent in a Day" },
+      { name: "LLMs & RAG", icon: "brain", tier: "Projects", note: "Industrial Knowledge Intelligence · Dr. Healify AI" },
+      { name: "Agentic AI", icon: "robot", tier: "Projects", note: "Five-agent hackathon platform" },
+      { name: "LangChain", icon: "langchain", tier: "Projects", note: "Dr. Healify AI" },
+      { name: "Scikit-learn", icon: "sklearn", tier: "Projects", note: "House Price Prediction" },
+      { name: "TensorFlow", icon: "tensorflow", tier: "Projects", note: "Mango disease detection (NKCon '25)" },
     ],
   },
   {
     category: "Microsoft Stack",
     blurb: "Dynamics 365, Dataverse and the Power Platform.",
     skills: [
-      { name: "Dynamics 365 CRM", icon: "microsoft", tier: "Expert", note: "RealtySlices" },
-      { name: "Power BI", icon: "chart", tier: "Expert", note: "Cognizant · US real-estate dashboard" },
-      { name: "Power Apps", icon: "apps", tier: "Advanced", note: "RealtySlices" },
-      { name: "Power Automate", icon: "automation", tier: "Advanced", note: "RealtySlices" },
+      { name: "Dynamics 365 CRM", icon: "microsoft", tier: "Production", note: "RealtySlices" },
+      { name: "Power Apps", icon: "apps", tier: "Production", note: "RealtySlices" },
+      { name: "Power Automate", icon: "automation", tier: "Production", note: "RealtySlices" },
+      { name: "Power BI", icon: "chart", tier: "Production", note: "Cognizant" },
     ],
   },
   {
     category: "Web",
     blurb: "Component-driven, responsive interfaces.",
     skills: [
-      { name: "Angular", icon: "angular", tier: "Expert", note: "Daily at RealtySlices" },
-      { name: "React", icon: "react", tier: "Advanced", note: "This portfolio" },
-      { name: "Flask", icon: "flask", tier: "Expert", note: "Healify · Plagiarism Checker · Art Gallery" },
-      { name: "Bootstrap", icon: "bootstrap", tier: "Advanced", note: "Online Art Gallery" },
+      { name: "Angular", icon: "angular", tier: "Production", note: "Daily at RealtySlices" },
+      { name: "React", icon: "react", tier: "Projects", note: "This portfolio" },
+      { name: "Flask", icon: "flask", tier: "Projects", note: "Dr. Healify AI · Online Art Gallery" },
+      { name: "Bootstrap", icon: "bootstrap", tier: "Projects", note: "Online Art Gallery" },
     ],
   },
   {
     category: "Languages",
     blurb: "Typed, tested, maintainable code.",
     skills: [
-      { name: "Python", icon: "python", tier: "Expert", note: "All AI / ML projects" },
-      { name: "TypeScript", icon: "typescript", tier: "Advanced", note: "RealtySlices · this site" },
-      { name: "C#", icon: "csharp", tier: "Proficient" },
-      { name: "Java", icon: "java", tier: "Proficient" },
+      { name: "Python", icon: "python", tier: "Projects", note: "All AI / ML projects" },
+      { name: "TypeScript", icon: "typescript", tier: "Production", note: "RealtySlices · this site" },
+      { name: "C#", icon: "csharp", tier: "Familiar" },
+      { name: "Java", icon: "java", tier: "Familiar" },
     ],
   },
   {
     category: "Cloud & DevOps",
     blurb: "Containers and cloud deployment.",
     skills: [
-      { name: "AWS", icon: "aws", tier: "Advanced", note: "AWS Cloud Practitioner" },
-      { name: "Docker", icon: "docker", tier: "Proficient" },
-      { name: "Azure", icon: "azure", tier: "Proficient" },
-      { name: "Kubernetes", icon: "kubernetes", tier: "Proficient" },
+      { name: "Docker", icon: "docker", tier: "Projects", note: "Industrial Knowledge Intelligence" },
+      { name: "AWS", icon: "aws", tier: "Familiar", note: "AWS Certified Cloud Practitioner" },
+      { name: "Azure", icon: "azure", tier: "Familiar" },
+      { name: "Kubernetes", icon: "kubernetes", tier: "Familiar" },
     ],
   },
   {
     category: "Data",
-    blurb: "Relational stores and vector databases.",
+    blurb: "Relational stores and vector search.",
     skills: [
-      { name: "MySQL", icon: "mysql", tier: "Advanced", note: "Online Art Gallery" },
-      { name: "Oracle SQL", icon: "sql", tier: "Advanced" },
-      { name: "FAISS", icon: "vector", tier: "Proficient", note: "Vector search for RAG" },
-      { name: "ChromaDB", icon: "database", tier: "Proficient", note: "Vector search for RAG" },
+      { name: "MySQL", icon: "mysql", tier: "Projects", note: "Online Art Gallery" },
+      { name: "FAISS", icon: "vector", tier: "Projects", note: "Vector search in Dr. Healify AI" },
+      { name: "Oracle SQL", icon: "sql", tier: "Familiar" },
+      { name: "ChromaDB", icon: "database", tier: "Familiar" },
     ],
   },
 ];
@@ -171,6 +180,21 @@ export type Project = {
 };
 
 export const projects: Project[] = [
+  {
+    slug: "industrial-knowledge",
+    title: "Industrial Knowledge Intelligence",
+    subtitle: "Knowledge-graph RAG for industrial plants",
+    description:
+      "Ingests a plant's documents — PDFs, spreadsheets, emails, scanned forms and P&IDs — links them into a knowledge graph, and answers engineers' questions with cited, confidence-scored answers. Five agents share one graph: ingestion, an expert copilot, root-cause analysis, regulatory compliance and lessons learned. Hybrid BM25 + graph retrieval with an offline fallback. Built by a two-person team for the ET AI Hackathon 2026.",
+    tags: ["Python", "FastAPI", "RAG", "Knowledge Graph", "BM25", "NetworkX", "OCR", "Docker"],
+    category: "AI / ML",
+    featured: true,
+    metric: "ET AI Hackathon 2026 · live demo",
+    accent: "#a78bfa",
+    repo: "raghavendrapatil17/Industrial-Knowledge-Intelligence",
+    github: "https://github.com/raghavendrapatil17/Industrial-Knowledge-Intelligence",
+    demo: "https://industrial-knowledge-intelligence-sz8a.onrender.com",
+  },
   {
     slug: "healify",
     title: "Dr. Healify AI",
@@ -357,6 +381,13 @@ export const certifications = [
     image: "/certs/tata-forage-data-visualisation.jpg.jpg",
     description: "Framing scenarios, choosing visuals, building dashboards and communicating insights.",
   },
+];
+
+/** On the résumé; listed as text because there is no certificate image in /public/certs. */
+export const moreCertifications = [
+  { name: "GenAI Powered Data Analytics", issuer: "Tata", year: "2025" },
+  { name: "Web Development", issuer: "Octanet Services", year: "2024" },
+  { name: "AWS Certified Cloud Practitioner", issuer: "AWS", year: "2023" },
 ];
 
 export const navLinks = [

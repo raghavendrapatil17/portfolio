@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiAward, FiMaximize2, FiX } from "react-icons/fi";
 import { BodyPortal } from "./ui/Providers";
-import { certifications, research } from "@/data/portfolio";
+import { certifications, research, moreCertifications } from "@/data/portfolio";
 import { ClipReveal, EASE, Reveal, SectionHeading, spotlight } from "./ui/primitives";
 
 type Cert = (typeof certifications)[number];
@@ -85,6 +85,17 @@ export default function Achievements() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {certifications.map((c, i) => <CertCard key={c.name} c={c} i={i} onOpen={() => setOpen(c)} />)}
         </div>
+
+        <Reveal className="mt-4">
+          <ul className="card divide-y divide-line sm:divide-y-0 sm:grid sm:grid-cols-3 sm:divide-x">
+            {moreCertifications.map((c) => (
+              <li key={c.name} className="p-5">
+                <div className="font-mono text-xs text-dim mb-1.5">{c.year} · {c.issuer}</div>
+                <div className="font-medium tracking-tight leading-snug">{c.name}</div>
+              </li>
+            ))}
+          </ul>
+        </Reveal>
       </div>
       <BodyPortal><AnimatePresence>{open && <Lightbox c={open} onClose={() => setOpen(null)} />}</AnimatePresence></BodyPortal>
     </section>
